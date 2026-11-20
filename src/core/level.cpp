@@ -49,7 +49,7 @@ bool loadBuildingMap(const char *filename,
             {
                 continue;
             }
-             if (floorFound[i - 1])
+            if (floorFound[i - 1])
             {
                 return false;
             }
@@ -340,4 +340,74 @@ bool loadInitialState(const char *filename,
 
     file.close();
     return true;
+}
+
+bool validateStartingRoom(int startFloor, int startRoom,
+                          const char horizontalConn[NUM_FLOORS][ROOMS_PER_FLOOR - 1])
+{
+    if (startFloor < 1 || startFloor > NUM_FLOORS || startRoom < 1 || startRoom > ROOMS_PER_FLOOR)
+    {
+        return false;
+    }
+
+    int f = startFloor - 1;
+    int r = startRoom - 1;
+
+    if (r > 0)
+    {
+        char connection = horizontalConn[f][r - 1];
+
+        if (connection == CONN_DOOR ||
+            connection == CONN_WINDOW)
+        {
+            return true;
+        }
+    }
+
+    if (r < ROOMS_PER_FLOOR - 1)
+    {
+        char connection = horizontalConn[f][r];
+
+        if (connection == CONN_DOOR ||
+            connection == CONN_WINDOW)
+        {
+            return true;
+        }
+    }
+
+    if (startRoom == 1)
+    {
+        return true;
+    }
+
+    if ((startFloor == 1 || startFloor == 2) &&
+        (startRoom == 2 || startRoom == 3))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+const char* getEntityName(char entitySymbol)
+{
+    switch (entitySymbol) {
+        case '<':  return "Master Key";
+        case ')':  return "Energy Pack";
+        case '\\': return "Emergency Toolkit";
+        case '4':  return "Clue Digit 4";
+        case '*':  return "Fuse";
+        case '~':  return "Cat";
+        case ';':  return "Control Panel";
+        case '(':  return "Lift Pass";
+        case '!':  return "Passenger";
+        case '%':  return "Medical Kit";
+        case '$':  return "Emergency Access Card";
+        case '2':  return "Clue Digit 2";
+        case '7':  return "Clue Digit 7";
+        case '^':  return "Cabinet / Train Key";
+        case '@':  return "Cat Carrier";
+        case '&':  return "Observation Token";
+        default:   return "Unknown Entity";
+    }
 }

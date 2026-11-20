@@ -7,26 +7,36 @@
 #include "util.h"
 #include <string>
 #include <iomanip>
+#include "level.h"
 using namespace std;
 
 // Modular simulation loop using primitive variables
 
 void dispalyMenu()
 {
-    cout << endl
-         << string(30, '=') << endl;
-    cout << setw(22) << "The Last Train" << endl;
-    cout << string(30, '=') << endl
-         << endl;
+    cout << "\033[34m"
+         << "==============================================================================================================\n"
+         << "=============     = === =     ======= ======   ===    =     =======     =    ===   ==     = === ==============\n"
+         << "=============== === === = =========== ===== === = ======= =========== === === = === === ===  == ==============\n"
+         << "=============== === === = =========== ===== === = ======= =========== === === = === === === = = ==============\n"
+         << "=============== ===     =    ======== =====     ==   ==== =========== ===    ==     === === = = ==============\n"
+         << "=============== === === = =========== ===== === ===== === =========== === = === === === === ==  ==============\n"
+         << "=============== === === = =========== ===== === ===== === =========== === == == === === === === ==============\n"
+         << "=============== === === =     =======     = === =    ==== =========== === === = === =     = === ==============\n"
+         << "==============================================================================================================\n"
+         << "\033[0m";
 
-    cout << "1. Start New Game" << endl;
+    cout << endl
+         << "1. Start New Game" << endl;
     cout << "2. Load Saved Game" << endl;
     cout << "3. Instructions Game" << endl;
     cout << "4. Display Map" << endl;
     cout << "5. Exit Game" << endl
          << endl;
 
-    cout << string(30, '=') << endl
+    cout << "\033[34m"
+         << endl
+         << string(100, '=') << "\033[0m" << endl
          << endl;
 }
 
@@ -37,7 +47,8 @@ int usersMenu()
     {
         dispalyMenu();
 
-        cout << "Enter Your Choice > ";
+        cout << "\033[35mEnter Your Choice > \033[0m";
+
         cin >> userChoice;
         if (cin.fail() || userChoice < 1 || userChoice > 5)
         {
@@ -49,6 +60,66 @@ int usersMenu()
 
         return userChoice;
     }
+}
+
+bool initializeNewGame(
+    int &playerFloor, int &playerRoom,
+    int &energy, int &time, int &score,
+    char inventory[MAX_INVENTORY_CAPACITY], int &inventoryCount,
+    bool objectives[NUM_OBJECTIVES], int &emergencyTripsLeft,
+    char horizontalConn[NUM_FLOORS][ROOMS_PER_FLOOR - 1],
+    char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
+    int entityCounts[NUM_FLOORS][ROOMS_PER_FLOOR])
+{
+    if (!loadBuildingMap(
+            "data/building.txt",
+            horizontalConn, roomEntities, entityCounts))
+    {
+        return false;
+    }
+
+    if (!loadInitialState(
+            "data/initial-state.txt",
+            playerFloor, playerRoom,
+            energy, time, score,
+            inventory, inventoryCount,
+            objectives, emergencyTripsLeft))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+void showCurrentState(
+    int playerFloor, int playerRoom,
+    int energy, int time, int score,
+    const char inventory[MAX_INVENTORY_CAPACITY],
+    int inventoryCount)
+{
+    cout << endl << endl << "\033[1;33m";
+    cout << "|     YOUR CURRENT STATE:" << endl;
+    cout << "|" << endl;
+    cout << "|     Location: F" << playerFloor << "-R" << playerRoom << endl;
+    cout << "|     Energy: " << energy << endl;
+    cout << "|     Time: " << time << endl;
+    cout << "|     Score: " << score << endl;
+    cout << "|" << endl;
+    cout << "|     Inventory: ";
+
+    if (inventoryCount == 0)
+    {
+        cout << "Empty" << endl;
+    }
+    else
+    {
+        for (int i = 0; i < inventoryCount; i++)
+        {
+            cout << inventory[i] << " - "
+                 << getEntityName(inventory[i]) << " ; ";
+        }
+    }
+    cout << "\033[0m";
 }
 
 void runSimulation(int &playerFloor, int &playerRoom,
@@ -67,28 +138,73 @@ void runSimulation(int &playerFloor, int &playerRoom,
         switch (userChoice)
         {
         case 1:
-            cout << "Starting New Game..... " << endl;
+        {
+            int floor, room;
+            bool initialization = initializeNewGame(
+                playerFloor, playerRoom,
+                energy, time, score,
+                inventory, inventoryCount,
+                objectives, emergencyTripsLeft,
+                horizontalConn, roomEntities, entityCounts);
+
+            if (!initialization)
+            {
+                cout << "\033[31mCould not initialize the new game.\033[0m" << endl;
+                break;
+            }
+            else
+            {
+                cout << endl
+                     << "\033[32m-> Game initialization Successfully!\033[0m" << endl
+                     << endl;
+            }
+
+            cout << "\033[35mEnter Floor (1-5) > \033[0m";
+            cin >> floor;
+            cout << "\033[35mEnter Starting Room (1-4) > \033[0m";
+            cin >> room;
+
+            if (validateStartingRoom(floor, room, horizontalConn))
+            {
+                playerFloor = floor;
+                playerRoom = room;
+
+                cout << endl
+                     << "\033[32m-> We are spawning you to " << "F" << floor << "-R" << room << "!\033[0m" << endl
+                     << endl;
+            }
+            else
+            {
+                cout << "\033[31m->Invalid Room Number. Enterance Not Allowed.\033[0m\n";
+                continue;
+            }
+
+            showCurrentState(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount);
+
             break;
+        }
         case 2:
             cout << "Loading Saved Game...." << endl;
             break;
         case 3:
         {
-            cout << "\nMISSION OBJECTIVES\n";
-            cout << "Rescue the passenger and cat.\n";
-            cout << "Find clues and unlock the cabinet.\n";
-            cout << "Restore the lift and board the train.\n";
+            cout << endl
+                 << "MISSION OBJECTIVES" << endl;
+            cout << endl
+                 << "1. Rescue the passenger and cat." << endl;
+            cout << "2. Find clues and unlock the cabinet." << endl;
+            cout << "3. Restore the lift and board the train." << endl;
 
             int in;
             while (true)
             {
-                cout << "Enter -1 to Move Back to Main Menu > ";
+                cout << "\033[35mEnter -1 to Move Back to Main Menu > \033[0m";
                 cin >> in;
                 if (in != -1 || cin.fail())
                 {
                     cin.clear();
                     cin.ignore(10000, '\n');
-                    cout << "Invalid Input. Please Enter Valid Answer.";
+                    cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m\n";
                     continue;
                 }
                 break;
@@ -99,7 +215,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
         case 4:
             cout << "Displaying Complete Map of Game: " << endl;
             break;
-       
+
         case 5:
             cout << "Thank you for playing The Last Train!" << endl;
             return;

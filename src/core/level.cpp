@@ -49,16 +49,20 @@ bool loadBuildingMap(const char *filename,
             {
                 continue;
             }
+             if (floorFound[i - 1])
+            {
+                return false;
+            }
             for (int j = 1; j < ROOMS_PER_FLOOR; j++)
             {
                 string s1 = "F" + to_string(i) + "-R" + to_string(j);
                 string s2 = "F" + to_string(i) + "-R" + to_string(j + 1);
 
-                int plc1 = line.find(s1);
-                int plc2 = line.find(s2);
+                int plc1 = static_cast<int>(line.find(s1));
+                int plc2 = static_cast<int>(line.find(s2));
 
-                if (plc1 == string::npos ||
-                    plc2 == string::npos ||
+                if (plc1 == -1 ||
+                    plc2 == -1 ||
                     plc2 < plc1 + 5)
                 {
                     return false;
@@ -68,10 +72,10 @@ bool loadBuildingMap(const char *filename,
                 int length = plc2 - start;
 
                 string connText = line.substr(start, length);
-                int first = connText.find_first_not_of(" \t");
-                int last = connText.find_last_not_of(" \t");
+                int first = static_cast<int>(connText.find_first_not_of(" \t"));
+                int last = static_cast<int>(connText.find_last_not_of(" \t"));
 
-                if (first == string::npos)
+                if (first == -1)
                 {
                     return false;
                 }
@@ -103,10 +107,10 @@ bool loadBuildingMap(const char *filename,
             for (int j = 1; j <= ROOMS_PER_FLOOR; j++)
             {
                 string label = "F" + to_string(i) + "-R" + to_string(j);
-                int roomStart = line.find(label);
+                int roomStart = static_cast<int>(line.find(label));
 
-                if (roomStart == string::npos ||
-                    roomStart >= entityLine.length())
+                if (roomStart == -1 ||
+                    roomStart >= static_cast<int>(entityLine.length()))
                 {
                     return false;
                 }
@@ -116,16 +120,16 @@ bool loadBuildingMap(const char *filename,
                 if (j < ROOMS_PER_FLOOR)
                 {
                     string nextLabel = "F" + to_string(i) + "-R" + to_string(j + 1);
-                    roomEnd = line.find(nextLabel);
+                    roomEnd = static_cast<int>(line.find(nextLabel));
                 }
                 else
                 {
-                    roomEnd = entityLine.find('|', roomStart);
+                    roomEnd = static_cast<int>(entityLine.find('|', roomStart));
                 }
 
-                if (roomEnd == string::npos ||
+                if (roomEnd == -1 ||
                     roomEnd <= roomStart ||
-                    roomEnd > entityLine.length())
+                    roomEnd > static_cast<int>(entityLine.length()))
                 {
                     return false;
                 }
@@ -149,11 +153,10 @@ bool loadBuildingMap(const char *filename,
                     entityCounts[i - 1][j - 1]++;
                 }
             }
-        
-             floorFound[i - 1] = true;
-                floorsLoaded++;
-                break;
-        
+
+            floorFound[i - 1] = true;
+            floorsLoaded++;
+            break;
         }
     }
     file.close();

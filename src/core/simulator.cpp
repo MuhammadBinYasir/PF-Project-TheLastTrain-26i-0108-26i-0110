@@ -91,37 +91,6 @@ bool initializeNewGame(
     return true;
 }
 
-void showCurrentState(
-    int playerFloor, int playerRoom,
-    int energy, int time, int score,
-    const char inventory[MAX_INVENTORY_CAPACITY],
-    int inventoryCount)
-{
-    cout << endl << endl << "\033[1;33m";
-    cout << "|     YOUR CURRENT STATE:" << endl;
-    cout << "|" << endl;
-    cout << "|     Location: F" << playerFloor << "-R" << playerRoom << endl;
-    cout << "|     Energy: " << energy << endl;
-    cout << "|     Time: " << time << endl;
-    cout << "|     Score: " << score << endl;
-    cout << "|" << endl;
-    cout << "|     Inventory: ";
-
-    if (inventoryCount == 0)
-    {
-        cout << "Empty" << endl;
-    }
-    else
-    {
-        for (int i = 0; i < inventoryCount; i++)
-        {
-            cout << inventory[i] << " - "
-                 << getEntityName(inventory[i]) << " ; ";
-        }
-    }
-    cout << "\033[0m";
-}
-
 void runSimulation(int &playerFloor, int &playerRoom,
                    int &energy, int &time, int &score,
                    char inventory[MAX_INVENTORY_CAPACITY], int &inventoryCount,
@@ -179,8 +148,10 @@ void runSimulation(int &playerFloor, int &playerRoom,
                 continue;
             }
 
-            showCurrentState(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount);
-
+            // renderDashboard(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, emergencyTripsLeft);
+            // renderRoomDetails(playerFloor, playerRoom, roomEntities, entityCounts[playerFloor - 1][playerRoom - 1]);
+            // renderAsciiBuilding(playerFloor, playerRoom);
+            renderObjectivesChecklist(objectives);
             break;
         }
         case 2:

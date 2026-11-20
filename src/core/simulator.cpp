@@ -30,8 +30,7 @@ void dispalyMenu()
          << "1. Start New Game" << endl;
     cout << "2. Load Saved Game" << endl;
     cout << "3. Instructions Game" << endl;
-    cout << "4. Display Map" << endl;
-    cout << "5. Exit Game" << endl
+    cout << "4. Exit Game" << endl
          << endl;
 
     cout << "\033[34m"
@@ -43,18 +42,17 @@ void dispalyMenu()
 int usersMenu()
 {
     int userChoice;
+    dispalyMenu();
     while (true)
     {
-        dispalyMenu();
-
         cout << "\033[35mEnter Your Choice > \033[0m";
 
         cin >> userChoice;
-        if (cin.fail() || userChoice < 1 || userChoice > 5)
+        if (cin.fail() || userChoice < 1 || userChoice > 4)
         {
             cin.clear();
             cin.ignore(10000, '\n');
-            cout << "Invalid Input. Please Enter Correct Input" << endl;
+            cout << "\033[31mInvalid Input. Please enter correct value.\033[0m" << endl << endl;
             continue;
         }
 
@@ -146,29 +144,36 @@ void runSimulation(int &playerFloor, int &playerRoom,
                      << "\033[32m-> Game initialization Successfully!\033[0m" << endl
                      << endl;
             }
-
-            cout << "\033[35mEnter Floor (1-5) > \033[0m";
-            cin >> floor;
-            cout << "\033[35mEnter Starting Room (1-4) > \033[0m";
-            cin >> room;
-
-            if (validateStartingRoom(floor, room, horizontalConn))
+            while (true)
             {
-                playerFloor = floor;
-                playerRoom = room;
 
-                cout << endl
-                     << "\033[32m-> We are spawning you to " << "F" << floor << "-R" << room << "!\033[0m" << endl
-                     << endl;
+                cout << "\033[35mEnter Floor (1-5) > \033[0m";
+                cin >> floor;
+                cout << "\033[35mEnter Starting Room (1-4) > \033[0m";
+                cin >> room;
+
+                if (validateStartingRoom(floor, room, horizontalConn))
+                {
+                    playerFloor = floor;
+                    playerRoom = room;
+
+                    cout << endl
+                         << "\033[32m-> We are spawning you to " << "F" << floor << "-R" << room << "!\033[0m" << endl
+                         << endl;
+                    break;
+                }
+                else
+                {
+                    cout << "\033[31m->Invalid Room Number. Enterance Not Allowed.\033[0m\n";
+                    continue;
+                }
             }
-            else
-            {
-                cout << "\033[31m->Invalid Room Number. Enterance Not Allowed.\033[0m\n";
-                continue;
-            }
+
             bool playing = true;
             while (playing)
             {
+                clearScreen();
+
                 cout << "What You can Do? " << endl;
                 cout << "1. Move" << endl
                      << "2. Inspect room" << endl
@@ -198,7 +203,8 @@ void runSimulation(int &playerFloor, int &playerRoom,
                 switch (in)
                 {
                 case 0:
-                playing = false;
+                    playing = false;
+                    clearScreen();
                     break;
                 case 2:
                     renderRoomDetails(playerFloor, playerRoom, roomEntities, entityCounts[playerFloor - 1][playerRoom - 1]);
@@ -237,15 +243,13 @@ void runSimulation(int &playerFloor, int &playerRoom,
             cout << "2. Find clues and unlock the cabinet." << endl;
             cout << "3. Restore the lift and board the train." << endl;
 
+            clearScreen();
             returnMenuFunction();
 
             break;
         }
-        case 4:
-            cout << "Displaying Complete Map of Game: " << endl;
-            break;
 
-        case 5:
+        case 4:
             cout << "Thank you for playing The Last Train!" << endl;
             return;
 

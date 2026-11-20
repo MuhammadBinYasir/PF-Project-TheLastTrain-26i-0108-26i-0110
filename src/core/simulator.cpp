@@ -52,7 +52,8 @@ int usersMenu()
         {
             cin.clear();
             cin.ignore(10000, '\n');
-            cout << "\033[31mInvalid Input. Please enter correct value.\033[0m" << endl << endl;
+            cout << "\033[31mInvalid Input. Please enter correct value.\033[0m" << endl
+                 << endl;
             continue;
         }
 
@@ -106,6 +107,44 @@ bool returnMenuFunction()
         break;
     }
     return true;
+}
+
+bool handleMoveCommand(int targetFloor, int targetRoom,
+                       int &currentFloor, int &currentRoom,
+                       int &energy, int &time,
+                       const char horizontalConn[NUM_FLOORS][ROOMS_PER_FLOOR - 1],
+                       const char inventory[MAX_INVENTORY_CAPACITY], int inventoryCount,
+                       int &emergencyTripsLeft, bool lift2Operational)
+{
+
+    char outConnType;
+    bool isDirectlyConnect = isDirectlyConnected(currentFloor, currentRoom, targetFloor, targetRoom, horizontalConn, outConnType);
+    if (isDirectlyConnect)
+    {
+        bool Traverse = canTraverse(targetFloor, targetRoom, outConnType, inventory, inventoryCount, emergencyTripsLeft, lift2Operational);
+        if (Traverse)
+        {
+            if (outConnType == CONN_DOOR || outConnType == CONN_LOCKED_DOOR || outConnType == CONN_STAIRS)
+            {
+                applyResourceDelta(energy, time, COST_MOVE_ORDINARY_ENERGY, COST_MOVE_ORDINARY_TIME);
+            }
+            else if (outConnType == CONN_WINDOW)
+            {
+                applyResourceDelta(energy, time, COST_MOVE_WINDOW_ENERGY, COST_MOVE_WINDOW_TIME);
+            }
+            else if (outConnType == CONN_LIFT1 || outConnType == CONN_LIFT2)
+            {
+                applyResourceDelta(energy, time, COST_MOVE_LIFT_ENERGY, COST_MOVE_LIFT_TIME);
+            }
+
+            if (outConnType == CONN_LIFT2)
+                emergencyTripsLeft--;
+            currentFloor = targetFloor;
+            currentRoom = targetRoom;
+            return true;
+        }
+    }
+    return false;
 }
 
 void runSimulation(int &playerFloor, int &playerRoom,
@@ -206,6 +245,24 @@ void runSimulation(int &playerFloor, int &playerRoom,
                     playing = false;
                     clearScreen();
                     break;
+                case 1:
+                {
+                    int floor, room;
+                    cout << "\033[35mEnter New Destination Floor (1-5) > \033[0m";
+                    cin >> floor;
+                    cout << "\033[35mEnter New Starting Room (1-4) > \033[0m";
+                    cin >> room;
+                    bool movement = handleMoveCommand(floor, room, playerFloor, playerRoom, energy, time, horizontalConn, inventory, inventoryCount, emergencyTripsLeft, objectives[OBJ_FUSE_INSTALLED]);
+                    if(movement){
+                        cout << endl
+                     << "\033[32m-> MOVED! You are Now at F" <<playerFloor << "-R" << playerRoom << ". \033[0m" << endl
+                     << endl;
+                    }else{
+                        cout << "\033[31mInvalid Input. You cannot Move to that room!.\033[0m" << endl;
+                    }
+                    returnMenuFunction();
+                    break;
+                }
                 case 2:
                     renderRoomDetails(playerFloor, playerRoom, roomEntities, entityCounts[playerFloor - 1][playerRoom - 1]);
                     returnMenuFunction();

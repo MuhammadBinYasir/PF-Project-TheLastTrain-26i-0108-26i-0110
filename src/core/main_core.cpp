@@ -3,6 +3,7 @@
 #include "logger.h"
 #include "viewer_iface.h"
 #include <iostream>
+using namespace std;
 
 int main() {
     // Player State Primitives

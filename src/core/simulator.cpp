@@ -91,6 +91,25 @@ bool initializeNewGame(
     return true;
 }
 
+bool returnMenuFunction()
+{
+    int in;
+    while (true)
+    {
+        cout << "\033[35mEnter -1 to Move Back to Main Menu > \033[0m";
+        cin >> in;
+        if (in != -1 || cin.fail())
+        {
+            cin.clear();
+            cin.ignore(10000, '\n');
+            cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m\n";
+            continue;
+        }
+        break;
+    }
+    return true;
+}
+
 void runSimulation(int &playerFloor, int &playerRoom,
                    int &energy, int &time, int &score,
                    char inventory[MAX_INVENTORY_CAPACITY], int &inventoryCount,
@@ -147,11 +166,63 @@ void runSimulation(int &playerFloor, int &playerRoom,
                 cout << "\033[31m->Invalid Room Number. Enterance Not Allowed.\033[0m\n";
                 continue;
             }
+            bool playing = true;
+            while (playing)
+            {
+                cout << "What You can Do? " << endl;
+                cout << "1. Move" << endl
+                     << "2. Inspect room" << endl
+                     << "3. Collect item" << endl
+                     << "4. Use item / interact" << endl
+                     << "5. Show current state" << endl
+                     << "6. Show map" << endl
+                     << "7. Show objectives" << endl
+                     << "8. Save game" << endl
+                     << "0. Return to main menu" << endl;
+
+                int in;
+                while (true)
+                {
+                    cout << "\033[35mEnter What you want to do > \033[0m";
+                    cin >> in;
+                    if (in < 0 || in > 8 || cin.fail())
+                    {
+                        cin.clear();
+                        cin.ignore(10000, '\n');
+                        cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m" << endl;
+                        continue;
+                    }
+                    break;
+                }
+
+                switch (in)
+                {
+                case 0:
+                playing = false;
+                    break;
+                case 2:
+                    renderRoomDetails(playerFloor, playerRoom, roomEntities, entityCounts[playerFloor - 1][playerRoom - 1]);
+                    returnMenuFunction();
+                    break;
+                case 5:
+                    renderDashboard(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, emergencyTripsLeft);
+                    returnMenuFunction();
+                    break;
+                case 6:
+                    renderAsciiBuilding(playerFloor, playerRoom);
+                    returnMenuFunction();
+                    break;
+                case 7:
+                    renderObjectivesChecklist(objectives);
+                    returnMenuFunction();
+                    break;
+                }
+            }
 
             // renderDashboard(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, emergencyTripsLeft);
             // renderRoomDetails(playerFloor, playerRoom, roomEntities, entityCounts[playerFloor - 1][playerRoom - 1]);
             // renderAsciiBuilding(playerFloor, playerRoom);
-            renderObjectivesChecklist(objectives);
+            // renderObjectivesChecklist(objectives);
             break;
         }
         case 2:
@@ -166,20 +237,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
             cout << "2. Find clues and unlock the cabinet." << endl;
             cout << "3. Restore the lift and board the train." << endl;
 
-            int in;
-            while (true)
-            {
-                cout << "\033[35mEnter -1 to Move Back to Main Menu > \033[0m";
-                cin >> in;
-                if (in != -1 || cin.fail())
-                {
-                    cin.clear();
-                    cin.ignore(10000, '\n');
-                    cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m\n";
-                    continue;
-                }
-                break;
-            }
+            returnMenuFunction();
 
             break;
         }

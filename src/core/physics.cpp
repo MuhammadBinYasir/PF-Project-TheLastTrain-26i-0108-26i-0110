@@ -1,5 +1,6 @@
 #include "physics.h"
 #include "util.h"
+#include "switches.h"
 
 // Movement validation and resource adjustments without structures
 
@@ -79,8 +80,10 @@ bool isDirectlyConnected(int fromF, int fromR, int toF, int toR,
     }
     if (fromF == toF)
     {
-        if (fromR == toR)
+        if (toR != fromR + 1 && toR != fromR - 1)
+        {
             return false;
+        }
         int boundary;
         if (fromR < toR)
             boundary = fromR - 1;
@@ -110,7 +113,7 @@ bool isDirectlyConnected(int fromF, int fromR, int toF, int toR,
         }
     }
 
-    bool lift1Floors = (fromF == 1 && toF == 2) || (fromF == 2 && toF == 1);
+    bool lift1Floors = canUseLift1(fromF, toF);
 
     bool fromLift1Room = (fromR == 2 || fromR == 3);
     bool toLift1Room = (toR == 2 || toR == 3);
@@ -140,19 +143,31 @@ bool canTraverse(int targetFloor, int targetRoom, char connType,
                  int emergencyTripsLeft, bool lift2Operational)
 {
 
-    if (targetFloor < 1 || targetFloor > NUM_FLOORS || targetRoom < 1 || targetRoom > ROOMS_PER_FLOOR) return false;
+    if (targetFloor < 1 || targetFloor > NUM_FLOORS || targetRoom < 1 || targetRoom > ROOMS_PER_FLOOR)
+        return false;
 
     if (connType == CONN_DOOR || connType == CONN_LIFT1 || connType == CONN_WINDOW || connType == CONN_STAIRS)
         return true;
-        
+
     if (connType == CONN_SOLID_WALL)
         return false;
 
     if (connType == CONN_LOCKED_DOOR)
     {
-        if (!hasItem(inventory, inventoryCount, '<'))
-            return false;
-        return true;
+        return unlockFloor3Door(inventory, inventoryCount);
+    }
+
+    if (connType == CONN_LIFT2)
+    {
+        if (lift2Operational)
+        {
+            return hasItem(
+                inventory, inventoryCount, ENT_LIFT_PASS);
+        }
+
+        return emergencyTripsLeft > 0 &&
+               hasItem(
+                   inventory, inventoryCount, ENT_EMERGENCY_CARD);
     }
 
     return false;

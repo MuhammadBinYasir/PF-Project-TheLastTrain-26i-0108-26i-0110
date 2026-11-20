@@ -56,7 +56,7 @@ bool installFuseControlPanel(char inventory[MAX_INVENTORY_CAPACITY], int &invent
 bool verifyCabinetCode(const char* enteredCode, const bool objectives[NUM_OBJECTIVES]){
     if (enteredCode == nullptr) return false;
 
-    if(!objectives[OBJ_CLUE_4] || !objectives[OBJ_CLUE_2] || !objectives[7]) return false;
+    if(!objectives[OBJ_CLUE_4] || !objectives[OBJ_CLUE_2] || !objectives[OBJ_CLUE_7]) return false;
 
     if(stringEquals(enteredCode, "427")) return true;
 

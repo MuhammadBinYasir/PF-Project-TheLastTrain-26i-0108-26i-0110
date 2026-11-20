@@ -97,7 +97,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
             break;
         }
         case 4:
-            cout << "Displaying COmplete Map of Game: " << endl;
+            cout << "Displaying Complete Map of Game: " << endl;
             break;
        
         case 5:

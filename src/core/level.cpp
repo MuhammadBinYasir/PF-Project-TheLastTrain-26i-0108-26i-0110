@@ -5,6 +5,160 @@
 #include <string>
 using namespace std;
 
+bool loadBuildingMap(const char *filename,
+                     char horizontalConn[NUM_FLOORS][ROOMS_PER_FLOOR - 1],
+                     char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
+                     int entityCounts[NUM_FLOORS][ROOMS_PER_FLOOR])
+{
+    ifstream file(filename);
+    if (!file.is_open())
+    {
+        return false;
+    }
+    string line;
+
+    for (int f = 0; f < NUM_FLOORS; f++)
+    {
+        for (int r = 0; r < ROOMS_PER_FLOOR - 1; r++)
+        {
+            horizontalConn[f][r] = CONN_NONE;
+        }
+
+        for (int r = 0; r < ROOMS_PER_FLOOR; r++)
+        {
+            entityCounts[f][r] = 0;
+
+            for (int k = 0; k < MAX_ENTITIES_PER_ROOM; k++)
+            {
+                roomEntities[f][r][k] = ENT_NONE;
+            }
+        }
+    }
+
+    bool floorFound[NUM_FLOORS] = {};
+    int floorsLoaded = 0;
+
+    while (floorsLoaded < NUM_FLOORS && getline(file, line))
+    {
+        // Horizontal Connections
+        for (int i = 1; i <= NUM_FLOORS; i++)
+        {
+            string floorLabel = "F" + to_string(i) + "-R1";
+
+            if (line.find(floorLabel) == string::npos)
+            {
+                continue;
+            }
+            for (int j = 1; j < ROOMS_PER_FLOOR; j++)
+            {
+                string s1 = "F" + to_string(i) + "-R" + to_string(j);
+                string s2 = "F" + to_string(i) + "-R" + to_string(j + 1);
+
+                int plc1 = line.find(s1);
+                int plc2 = line.find(s2);
+
+                if (plc1 == string::npos ||
+                    plc2 == string::npos ||
+                    plc2 < plc1 + 5)
+                {
+                    return false;
+                }
+
+                int start = plc1 + 5;
+                int length = plc2 - start;
+
+                string connText = line.substr(start, length);
+                int first = connText.find_first_not_of(" \t");
+                int last = connText.find_last_not_of(" \t");
+
+                if (first == string::npos)
+                {
+                    return false;
+                }
+
+                connText = connText.substr(first, last - first + 1);
+
+                if (connText == "L1")
+                {
+                    horizontalConn[i - 1][j - 1] = CONN_NONE;
+                }
+                else if (connText == "D" ||
+                         connText == "W" ||
+                         connText == "L" ||
+                         connText == "#")
+                {
+                    horizontalConn[i - 1][j - 1] = connText[0];
+                }
+                else
+                    return false;
+            }
+
+            // Room Entities
+            string entityLine;
+
+            if (!getline(file, entityLine))
+                return false;
+
+            const string validEntities = "<)\\4*~;(!%$27^@&";
+            for (int j = 1; j <= ROOMS_PER_FLOOR; j++)
+            {
+                string label = "F" + to_string(i) + "-R" + to_string(j);
+                int roomStart = line.find(label);
+
+                if (roomStart == string::npos ||
+                    roomStart >= entityLine.length())
+                {
+                    return false;
+                }
+
+                int roomEnd;
+
+                if (j < ROOMS_PER_FLOOR)
+                {
+                    string nextLabel = "F" + to_string(i) + "-R" + to_string(j + 1);
+                    roomEnd = line.find(nextLabel);
+                }
+                else
+                {
+                    roomEnd = entityLine.find('|', roomStart);
+                }
+
+                if (roomEnd == string::npos ||
+                    roomEnd <= roomStart ||
+                    roomEnd > entityLine.length())
+                {
+                    return false;
+                }
+
+                string roomText = entityLine.substr(roomStart, roomEnd - roomStart);
+
+                for (char symbol : roomText)
+                {
+                    if (symbol == ' ' || symbol == '\t' || symbol == '|')
+                        continue;
+                    if (validEntities.find(symbol) == string::npos)
+                        return false;
+                    int count = entityCounts[i - 1][j - 1];
+
+                    if (count >= MAX_ENTITIES_PER_ROOM)
+                    {
+                        return false;
+                    }
+
+                    roomEntities[i - 1][j - 1][count] = symbol;
+                    entityCounts[i - 1][j - 1]++;
+                }
+            }
+        
+             floorFound[i - 1] = true;
+                floorsLoaded++;
+                break;
+        
+        }
+    }
+    file.close();
+    return floorsLoaded == NUM_FLOORS;
+}
 
 bool loadInitialState(const char *filename,
                       int &playerFloor, int &playerRoom,

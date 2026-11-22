@@ -193,6 +193,98 @@ bool handleInspectCommand(int currentFloor, int currentRoom,
     return true;
 }
 
+bool handleCollectCommand(char itemSymbol, int currentFloor, int currentRoom,
+                          int &energy, int &time, int &score,
+                          char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
+                          int &entityCount,
+                          char inventory[MAX_INVENTORY_CAPACITY], int &inventoryCount,
+                          bool objectives[NUM_OBJECTIVES])
+{
+
+    if (currentFloor < 1 || currentFloor > NUM_FLOORS || currentRoom < 1 || currentRoom > ROOMS_PER_FLOOR || entityCount < 0 || entityCount > MAX_ENTITIES_PER_ROOM || inventoryCount < 0 || inventoryCount > MAX_INVENTORY_CAPACITY)
+        return false;
+
+    int itemIndex = -1;
+    for (int i = 0; i < entityCount; i++)
+    {
+        if (roomEntities[currentFloor - 1][currentRoom - 1][i] == itemSymbol)
+        {
+            itemIndex = i;
+            break;
+        }
+    }
+
+    if (itemIndex == -1)
+        return false;
+
+    if (itemSymbol == ENT_MASTER_KEY || itemSymbol == ENT_FUSE || itemSymbol == ENT_LIFT_PASS || itemSymbol == ENT_MEDICAL_KIT || itemSymbol == ENT_EMERGENCY_CARD || itemSymbol == ENT_CAT_CARRIER || itemSymbol == ENT_CABINET_TRAIN_KEY)
+    {
+        if (inventoryCount < 0 || inventoryCount >= MAX_INVENTORY_CAPACITY)
+            return false;
+
+        if (itemSymbol == ENT_CABINET_TRAIN_KEY &&
+            !objectives[OBJ_CABINET_UNLOCKED])
+        {
+            return false;
+        }
+
+        if (!addItem(inventory, inventoryCount, itemSymbol))
+            return false;
+    }
+    else if (itemSymbol != ENT_ENERGY_PACK && itemSymbol != ENT_EMERGENCY_TOOLKIT && itemSymbol != ENT_OBSERVATION_TOKEN)
+        return false;
+
+    for (int i = itemIndex; i < entityCount - 1; i++)
+    {
+        roomEntities[currentFloor - 1][currentRoom - 1][i] = roomEntities[currentFloor - 1][currentRoom - 1][i + 1];
+    }
+    entityCount--;
+    roomEntities[currentFloor - 1][currentRoom - 1][entityCount] = ENT_NONE;
+
+    applyResourceDelta(energy, time, COST_ITEM_PICKUP_ENERGY, COST_ITEM_PICKUP_TIME);
+
+    if (energy <= 0 || time <= 0)
+        return true;
+
+    if (itemSymbol == ENT_MASTER_KEY)
+    {
+        objectives[OBJ_MASTER_KEY] = true;
+        applyScoreDelta(score, SCORE_KEY_COLLECT);
+    }
+    else if (itemSymbol == ENT_FUSE)
+    {
+        objectives[OBJ_FUSE_COLLECTED] = true;
+    }
+    else if (itemSymbol == ENT_LIFT_PASS)
+    {
+        objectives[OBJ_LIFT_PASS] = true;
+        applyScoreDelta(score, SCORE_LIFT_PASS);
+    }
+    else if (itemSymbol == ENT_CAT_CARRIER)
+    {
+        objectives[OBJ_CAT_CARRIER] = true;
+    }
+    else if (itemSymbol == ENT_CABINET_TRAIN_KEY)
+    {
+        objectives[OBJ_TRAIN_KEY] = true;
+        applyScoreDelta(score, SCORE_TRAIN_KEY);
+    }
+    else if (itemSymbol == ENT_ENERGY_PACK)
+    {
+        applyResourceDelta(energy, time, BONUS_ENERGY_PACK, 0);
+    }
+    else if (itemSymbol == ENT_EMERGENCY_TOOLKIT)
+    {
+        applyResourceDelta(energy, time, BONUS_EMERGENCY_TOOLKIT, 0);
+    }
+    else if (itemSymbol == ENT_OBSERVATION_TOKEN)
+    {
+        applyResourceDelta(energy, time, 0, BONUS_OBSERVATION_TOKEN);
+    }
+
+    return true;
+}
+
 void runSimulation(int &playerFloor, int &playerRoom,
                    int &energy, int &time, int &score,
                    char inventory[MAX_INVENTORY_CAPACITY], int &inventoryCount,
@@ -393,6 +485,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
                         {
                             cout << "Your Time has run out." << endl;
                         }
+                        cout << "\033[0m" << endl;
                     }
 
                     returnMenuFunction();
@@ -424,6 +517,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
             break;
         case 3:
         {
+            clearScreen();
             cout << endl
                  << "MISSION OBJECTIVES" << endl;
             cout << endl
@@ -431,7 +525,6 @@ void runSimulation(int &playerFloor, int &playerRoom,
             cout << "2. Find clues and unlock the cabinet." << endl;
             cout << "3. Restore the lift and board the train." << endl;
 
-            clearScreen();
             returnMenuFunction();
 
             break;

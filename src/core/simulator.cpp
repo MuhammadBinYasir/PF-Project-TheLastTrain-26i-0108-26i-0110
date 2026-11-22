@@ -285,6 +285,60 @@ bool handleCollectCommand(char itemSymbol, int currentFloor, int currentRoom,
     return true;
 }
 
+bool handleUseCommand(char itemSymbol, int currentFloor, int currentRoom,
+                      int &energy, int &time, int &score,
+                      char inventory[MAX_INVENTORY_CAPACITY], int &inventoryCount,
+                      bool objectives[NUM_OBJECTIVES])
+{
+
+    if (currentFloor < 1 || currentFloor > NUM_FLOORS || currentRoom < 1 || currentRoom > ROOMS_PER_FLOOR || inventoryCount < 0 || inventoryCount > MAX_INVENTORY_CAPACITY)
+        return false;
+
+    if (!hasItem(inventory, inventoryCount, itemSymbol))
+        return false;
+    if (itemSymbol == ENT_FUSE && (currentFloor != 3 || currentRoom != 4 || objectives[OBJ_FUSE_INSTALLED]))
+        return false;
+    else if (itemSymbol == ENT_MEDICAL_KIT && (currentFloor != 4 || currentRoom != 1 || objectives[OBJ_PASSENGER_RESCUED]))
+        return false;
+    else if (itemSymbol == ENT_CAT_CARRIER && (currentFloor != 3 || currentRoom != 3 || objectives[OBJ_CAT_SECURED]))
+        return false;
+    else if (itemSymbol == ENT_CABINET_TRAIN_KEY && (currentFloor != 5 || currentRoom != 2 || !objectives[OBJ_CAT_SECURED] || !objectives[OBJ_PASSENGER_RESCUED] || objectives[OBJ_TRAIN_PREPARED]))
+        return false;
+    else if (itemSymbol != ENT_FUSE && itemSymbol != ENT_MEDICAL_KIT && itemSymbol != ENT_CAT_CARRIER && itemSymbol != ENT_CABINET_TRAIN_KEY)
+        return false;
+
+    applyResourceDelta(energy, time, COST_ITEM_USE_ENERGY, COST_ITEM_USE_TIME);
+
+    if (energy <= 0 || time <= 0)
+        return true;
+
+    if (itemSymbol == ENT_FUSE)
+    {
+        installFuseControlPanel(inventory, inventoryCount, objectives, score);
+        cout << "\033[32mFuse installed! Lift 2 repaired." << "\033[0m" << endl;
+    }
+    else if (itemSymbol == ENT_MEDICAL_KIT)
+    {
+        objectives[OBJ_PASSENGER_RESCUED] = true;
+        applyScoreDelta(score, SCORE_RESCUE_PASSENGER);
+        cout << "\033[32mPassenger rescued! +" << SCORE_RESCUE_PASSENGER << " points.\033[0m" << endl;
+    }
+    else if (itemSymbol == ENT_CAT_CARRIER)
+    {
+        objectives[OBJ_CAT_SECURED] = true;
+        applyScoreDelta(score, SCORE_SECURE_CAT);
+        cout << "\033[32mCat secured! +" << SCORE_SECURE_CAT << " points.\033[0m" << endl;
+    }
+    else if (itemSymbol == ENT_CABINET_TRAIN_KEY)
+    {
+        objectives[OBJ_TRAIN_PREPARED] = true;
+        applyScoreDelta(score, SCORE_PREPARE_TRAIN);
+        cout << "\033[32mTrain prepared and boarded! +" << SCORE_PREPARE_TRAIN << " points.\033[0m" << endl;
+    }
+
+    return true;
+}
+
 void runSimulation(int &playerFloor, int &playerRoom,
                    int &energy, int &time, int &score,
                    char inventory[MAX_INVENTORY_CAPACITY], int &inventoryCount,
@@ -548,6 +602,53 @@ void runSimulation(int &playerFloor, int &playerRoom,
                     returnMenuFunction();
                     break;
                 }
+
+                case 4:
+                {
+
+                    char itemSymbol;
+                    cout << "\033[35mEnter the item symbol to use > \033[0m";
+                    cin >> itemSymbol;
+                    if (cin.fail())
+                    {
+                        if (cin.eof())
+                            return;
+
+                        cin.clear();
+                        cin.ignore(10000, '\n');
+
+                        cout << "\033[31mInvalid input.\033[0m" << endl;
+                        returnMenuFunction();
+                        break;
+                    }
+
+                    bool used = handleUseCommand(itemSymbol, playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, objectives);
+                    if (energy <= 0 || time <= 0)
+                    {
+                        objectives[OBJ_MISSION_FAILED] = true;
+                        playing = false;
+
+                        cout << "\033[31mMISSION FAILED!" << endl;
+
+                        if (energy <= 0)
+                            cout << "Your Energy has run out." << endl;
+
+                        if (time <= 0)
+                            cout << "Your Time has run out." << endl;
+
+                        cout << "\033[0m";
+                    }
+                    else if (!used)
+                    {
+                        cout << "\033[31mCannot use that item here, "
+                             << "or its requirements are not satisfied.\033[0m"
+                             << endl;
+                    }
+
+                    returnMenuFunction();
+                    break;
+                }
+
                 case 5:
                     renderDashboard(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, emergencyTripsLeft);
                     returnMenuFunction();

@@ -148,13 +148,50 @@ bool handleMoveCommand(int targetFloor, int targetRoom,
     return false;
 }
 
-// bool handleInspectCommand(int currentFloor, int currentRoom,
-//                           int &energy, int &time,
-//                           const char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
-//                           int entityCount,
-//                           bool objectives[NUM_OBJECTIVES], int &score)
-// {
-// }
+bool handleInspectCommand(int currentFloor, int currentRoom,
+                          int &energy, int &time,
+                          const char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
+                          int entityCount,
+                          bool objectives[NUM_OBJECTIVES], int &score)
+{
+    if (currentFloor < 1 || currentFloor > NUM_FLOORS || currentRoom < 1 || currentRoom > ROOMS_PER_FLOOR || entityCount < 0 || entityCount > MAX_ENTITIES_PER_ROOM)
+        return false;
+
+    applyResourceDelta(energy, time, COST_INSPECT_ENERGY, COST_INSPECT_TIME);
+
+    cout << endl;
+
+    if (energy <= 0 || time <= 0)
+    {
+        return true;
+    }
+
+    renderRoomDetails(currentFloor, currentRoom, roomEntities, entityCount);
+
+    for (int i = 0; i < entityCount; i++)
+    {
+        char symbol = roomEntities[currentFloor - 1][currentRoom - 1][i];
+        int c_Index = -1;
+
+        if (symbol == ENT_CLUE_4)
+            c_Index = OBJ_CLUE_4;
+        else if (symbol == ENT_CLUE_2)
+            c_Index = OBJ_CLUE_2;
+        else if (symbol == ENT_CLUE_7)
+            c_Index = OBJ_CLUE_7;
+
+        if (c_Index != -1 && !objectives[c_Index])
+        {
+            objectives[c_Index] = true;
+            applyScoreDelta(score, SCORE_CLUE_FOUND);
+
+            cout << "\033[32mClue " << symbol << " discovered! +"
+                 << SCORE_CLUE_FOUND << " points.\033[0m" << endl;
+        }
+    }
+
+    return true;
+}
 
 void runSimulation(int &playerFloor, int &playerRoom,
                    int &energy, int &time, int &score,
@@ -325,14 +362,42 @@ void runSimulation(int &playerFloor, int &playerRoom,
 
                         cout << "\033[0m";
                     }
-                    
+
                     returnMenuFunction();
                     break;
                 }
                 case 2:
-                    renderRoomDetails(playerFloor, playerRoom, roomEntities, entityCounts[playerFloor - 1][playerRoom - 1]);
+                { // renderRoomDetails(playerFloor, playerRoom, roomEntities, entityCounts[playerFloor - 1][playerRoom - 1]);
+                    bool res = handleInspectCommand(playerFloor, playerRoom, energy, time, roomEntities, entityCounts[playerFloor - 1][playerRoom - 1], objectives, score);
+
+                    if (!res)
+                    {
+                        cout << "\033[31mCould not inspect this room.\033[0m"
+                             << endl;
+                    }
+                    else if (res && (energy <= 0 || time <= 0))
+                    {
+                        objectives[OBJ_MISSION_FAILED] = true;
+                        playing = false;
+
+                        cout << endl
+                             << "\033[31m";
+                        cout << "MISSION FAILED!" << endl;
+
+                        if (energy <= 0)
+                        {
+                            cout << "Your Energy has run out." << endl;
+                        }
+
+                        if (time <= 0)
+                        {
+                            cout << "Your Time has run out." << endl;
+                        }
+                    }
+
                     returnMenuFunction();
                     break;
+                }
                 case 5:
                     renderDashboard(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, emergencyTripsLeft);
                     returnMenuFunction();

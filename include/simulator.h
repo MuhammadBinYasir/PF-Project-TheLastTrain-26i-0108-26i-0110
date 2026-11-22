@@ -25,12 +25,14 @@ bool handleInspectCommand(int currentFloor, int currentRoom,
                           int entityCount,
                           bool objectives[NUM_OBJECTIVES], int& score);
 
+// Added emergencytrips left : @MuhammadBinYasir
+
 bool handleCollectCommand(char itemSymbol, int currentFloor, int currentRoom,
                           int& energy, int& time, int& score,
                           char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
                           int& entityCount,
                           char inventory[MAX_INVENTORY_CAPACITY], int& inventoryCount,
-                          bool objectives[NUM_OBJECTIVES]);
+                          bool objectives[NUM_OBJECTIVES], int& emergencyTripsLeft);
 
 bool handleUseCommand(char itemSymbol, int currentFloor, int currentRoom,
                       int& energy, int& time, int& score,

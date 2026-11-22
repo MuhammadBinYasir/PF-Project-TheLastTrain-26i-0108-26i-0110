@@ -198,7 +198,7 @@ bool handleCollectCommand(char itemSymbol, int currentFloor, int currentRoom,
                           char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
                           int &entityCount,
                           char inventory[MAX_INVENTORY_CAPACITY], int &inventoryCount,
-                          bool objectives[NUM_OBJECTIVES])
+                          bool objectives[NUM_OBJECTIVES], int &emergencyTripsLeft)
 {
 
     if (currentFloor < 1 || currentFloor > NUM_FLOORS || currentRoom < 1 || currentRoom > ROOMS_PER_FLOOR || entityCount < 0 || entityCount > MAX_ENTITIES_PER_ROOM || inventoryCount < 0 || inventoryCount > MAX_INVENTORY_CAPACITY)
@@ -280,6 +280,10 @@ bool handleCollectCommand(char itemSymbol, int currentFloor, int currentRoom,
     else if (itemSymbol == ENT_OBSERVATION_TOKEN)
     {
         applyResourceDelta(energy, time, 0, BONUS_OBSERVATION_TOKEN);
+    }
+    else if (itemSymbol == ENT_EMERGENCY_CARD)
+    {
+        emergencyTripsLeft = 3;
     }
 
     return true;
@@ -570,7 +574,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
                         roomEntities,
                         entityCounts[playerFloor - 1][playerRoom - 1],
                         inventory, inventoryCount,
-                        objectives);
+                        objectives, emergencyTripsLeft);
 
                     if (energy <= 0 || time <= 0)
                     {

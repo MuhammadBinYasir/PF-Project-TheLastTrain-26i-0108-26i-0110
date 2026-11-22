@@ -491,6 +491,63 @@ void runSimulation(int &playerFloor, int &playerRoom,
                     returnMenuFunction();
                     break;
                 }
+
+                case 3:
+                {
+                    char itemSymbol;
+
+                    cout << "Enter the symbol of the item to collect > ";
+                    cin >> itemSymbol;
+
+                    if (cin.fail())
+                    {
+                        cin.clear();
+                        cin.ignore(10000, '\n');
+
+                        cout << "\033[31mInvalid input.\033[0m" << endl;
+                        returnMenuFunction();
+                        break;
+                    }
+
+                    bool collected = handleCollectCommand(
+                        itemSymbol,
+                        playerFloor, playerRoom,
+                        energy, time, score,
+                        roomEntities,
+                        entityCounts[playerFloor - 1][playerRoom - 1],
+                        inventory, inventoryCount,
+                        objectives);
+
+                    if (energy <= 0 || time <= 0)
+                    {
+                        objectives[OBJ_MISSION_FAILED] = true;
+                        playing = false;
+
+                        cout << "\033[31mMISSION FAILED!" << endl;
+
+                        if (energy <= 0)
+                        {
+                            cout << "Your Energy has run out." << endl;
+                        }
+
+                        if (time <= 0)
+                        {
+                            cout << "Your Time has run out." << endl;
+                        }
+
+                        cout << "\033[0m";
+                    }
+                    else if (collected)
+                    {
+                        cout << "\033[32mCollection performed.\033[0m" << endl;
+                    }
+                    else
+                    {
+                        cout << "\033[31mCannot collect that item.\033[0m" << endl;
+                    }
+                    returnMenuFunction();
+                    break;
+                }
                 case 5:
                     renderDashboard(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, emergencyTripsLeft);
                     returnMenuFunction();

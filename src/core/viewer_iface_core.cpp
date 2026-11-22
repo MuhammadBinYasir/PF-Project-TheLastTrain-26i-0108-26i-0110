@@ -32,11 +32,11 @@ void renderDashboard(int playerFloor, int playerRoom, int energy, int time, int 
     {
         for (int i = 0; i < inventoryCount; i++)
         {
-            cout << inventory[i] << " - "
-                 << getEntityName(inventory[i]) << " ; ";
+            cout << getEntityName(inventory[i]) << " ( " << inventory[i] << " ) | ";
         }
     }
     cout << "\033[0m";
+    cout << endl;
 }
 
 void renderRoomDetails(int floor, int room,
@@ -59,6 +59,7 @@ void renderRoomDetails(int floor, int room,
         cout << "|           -" << getEntityName(roomEntities[floor - 1][room - 1][i]) << endl;
     }
     cout << "\033[0m";
+    cout << endl;
 }
 
 void renderAsciiBuilding(int playerFloor, int playerRoom)

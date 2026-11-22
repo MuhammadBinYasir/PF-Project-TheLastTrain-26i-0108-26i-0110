@@ -137,8 +137,9 @@ bool handleMoveCommand(int targetFloor, int targetRoom,
                 applyResourceDelta(energy, time, COST_MOVE_LIFT_ENERGY, COST_MOVE_LIFT_TIME);
             }
 
-            if (outConnType == CONN_LIFT2)
+            if (outConnType == CONN_LIFT2 && !lift2Operational)
                 emergencyTripsLeft--;
+
             currentFloor = targetFloor;
             currentRoom = targetRoom;
             return true;
@@ -146,6 +147,14 @@ bool handleMoveCommand(int targetFloor, int targetRoom,
     }
     return false;
 }
+
+// bool handleInspectCommand(int currentFloor, int currentRoom,
+//                           int &energy, int &time,
+//                           const char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
+//                           int entityCount,
+//                           bool objectives[NUM_OBJECTIVES], int &score)
+// {
+// }
 
 void runSimulation(int &playerFloor, int &playerRoom,
                    int &energy, int &time, int &score,
@@ -188,8 +197,23 @@ void runSimulation(int &playerFloor, int &playerRoom,
 
                 cout << "\033[35mEnter Floor (1-5) > \033[0m";
                 cin >> floor;
+                if (floor < 1 || floor > 5 || cin.fail())
+                {
+                    cin.clear();
+                    cin.ignore(10000, '\n');
+                    cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m" << endl;
+                    continue;
+                }
                 cout << "\033[35mEnter Starting Room (1-4) > \033[0m";
                 cin >> room;
+
+                if (room < 1 || room > 4 || cin.fail())
+                {
+                    cin.clear();
+                    cin.ignore(10000, '\n');
+                    cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m" << endl;
+                    continue;
+                }
 
                 if (validateStartingRoom(floor, room, horizontalConn))
                 {
@@ -248,18 +272,60 @@ void runSimulation(int &playerFloor, int &playerRoom,
                 case 1:
                 {
                     int floor, room;
-                    cout << "\033[35mEnter New Destination Floor (1-5) > \033[0m";
+                    cout << "\033[35mEnter Destination Floor (1-5) > \033[0m";
                     cin >> floor;
-                    cout << "\033[35mEnter New Starting Room (1-4) > \033[0m";
+                    if (cin.fail())
+                    {
+                        cin.clear();
+                        cin.ignore(10000, '\n');
+                        cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m" << endl;
+                        continue;
+                    }
+                    cout << "\033[35mEnter Destination Room (1-4) > \033[0m";
                     cin >> room;
+
+                    if (cin.fail())
+                    {
+                        cin.clear();
+                        cin.ignore(10000, '\n');
+                        cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m" << endl;
+                        continue;
+                    }
+
                     bool movement = handleMoveCommand(floor, room, playerFloor, playerRoom, energy, time, horizontalConn, inventory, inventoryCount, emergencyTripsLeft, objectives[OBJ_FUSE_INSTALLED]);
-                    if(movement){
+                    if (movement)
+                    {
                         cout << endl
-                     << "\033[32m-> MOVED! You are Now at F" <<playerFloor << "-R" << playerRoom << ". \033[0m" << endl
-                     << endl;
-                    }else{
+                             << "\033[32m-> MOVED! You are Now at F" << playerFloor << "-R" << playerRoom << ". \033[0m" << endl
+                             << endl;
+                    }
+                    else
+                    {
                         cout << "\033[31mInvalid Input. You cannot Move to that room!.\033[0m" << endl;
                     }
+
+                    if (energy <= 0 || time <= 0)
+                    {
+                        objectives[OBJ_MISSION_FAILED] = true;
+                        playing = false;
+
+                        cout << endl
+                             << "\033[31m";
+                        cout << "MISSION FAILED!" << endl;
+
+                        if (energy <= 0)
+                        {
+                            cout << "Your Energy has run out." << endl;
+                        }
+
+                        if (time <= 0)
+                        {
+                            cout << "Your Time has run out." << endl;
+                        }
+
+                        cout << "\033[0m";
+                    }
+                    
                     returnMenuFunction();
                     break;
                 }

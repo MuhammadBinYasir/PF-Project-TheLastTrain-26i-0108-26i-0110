@@ -399,6 +399,23 @@ bool handleUnlockCabinetCommand(const char *code, int currentFloor, int currentR
 
     return true;
 }
+
+bool checkEndConditions(int energy, int time, const bool objectives[NUM_OBJECTIVES])
+{
+    if (energy <= 0 || time <= 0) return true;
+
+    for (int i = 0; i <= OBJ_TRAIN_PREPARED; i++)
+    {
+        if (!objectives[i])
+        {
+            cout << "\033[31mObjectives not yet completed.\033[0m" << endl;
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void runSimulation(int &playerFloor, int &playerRoom,
                    int &energy, int &time, int &score,
                    char inventory[MAX_INVENTORY_CAPACITY], int &inventoryCount,
@@ -696,9 +713,11 @@ void runSimulation(int &playerFloor, int &playerRoom,
                             objectives, score, roomEntities,
                             entityCounts[playerFloor - 1][playerRoom - 1],
                             energy, time);
-                    }else{
+                    }
+                    else
+                    {
 
-                    used = handleUseCommand(itemSymbol, playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, objectives);
+                        used = handleUseCommand(itemSymbol, playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, objectives);
                     }
                     if (energy <= 0 || time <= 0)
                     {
@@ -739,6 +758,27 @@ void runSimulation(int &playerFloor, int &playerRoom,
                     returnMenuFunction();
                     break;
                 }
+
+
+                if (!playing)
+                    break;
+
+                    if(checkEndConditions(energy, time, objectives)){
+                        playing = false;
+                         if (energy <= 0 || time <= 0)
+                    {
+                        objectives[OBJ_MISSION_FAILED] = true;
+                        cout << "\033[31mMISSION FAILED!\033[0m" << endl;
+                    }
+                    else
+                    {
+                        objectives[OBJ_MISSION_WON] = true;
+                        applyScoreDelta(score, SCORE_MISSION_VICTORY);
+                        cout << "\033[32mMISSION WON! +"
+                             << SCORE_MISSION_VICTORY << " points.\033[0m" << endl;
+                    }
+                    }
+                     returnMenuFunction();
             }
 
             // renderDashboard(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, emergencyTripsLeft);

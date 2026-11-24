@@ -408,7 +408,6 @@ bool checkEndConditions(int energy, int time, const bool objectives[NUM_OBJECTIV
     {
         if (!objectives[i])
         {
-            cout << "\033[31mObjectives not yet completed.\033[0m" << endl;
             return false;
         }
     }
@@ -564,29 +563,6 @@ void runSimulation(int &playerFloor, int &playerRoom,
                         cout << "\033[31mInvalid Input. You cannot Move to that room!.\033[0m" << endl;
                     }
 
-                    if (energy <= 0 || time <= 0)
-                    {
-                        objectives[OBJ_MISSION_FAILED] = true;
-                        playing = false;
-
-                        cout << endl
-                             << "\033[31m";
-                        cout << "MISSION FAILED!" << endl;
-
-                        if (energy <= 0)
-                        {
-                            cout << "Your Energy has run out." << endl;
-                        }
-
-                        if (time <= 0)
-                        {
-                            cout << "Your Time has run out." << endl;
-                        }
-
-                        cout << "\033[0m";
-                    }
-
-                    returnMenuFunction();
                     break;
                 }
                 case 2:
@@ -598,28 +574,6 @@ void runSimulation(int &playerFloor, int &playerRoom,
                         cout << "\033[31mCould not inspect this room.\033[0m"
                              << endl;
                     }
-                    else if (res && (energy <= 0 || time <= 0))
-                    {
-                        objectives[OBJ_MISSION_FAILED] = true;
-                        playing = false;
-
-                        cout << endl
-                             << "\033[31m";
-                        cout << "MISSION FAILED!" << endl;
-
-                        if (energy <= 0)
-                        {
-                            cout << "Your Energy has run out." << endl;
-                        }
-
-                        if (time <= 0)
-                        {
-                            cout << "Your Time has run out." << endl;
-                        }
-                        cout << "\033[0m" << endl;
-                    }
-
-                    returnMenuFunction();
                     break;
                 }
 
@@ -636,7 +590,6 @@ void runSimulation(int &playerFloor, int &playerRoom,
                         cin.ignore(10000, '\n');
 
                         cout << "\033[31mInvalid input.\033[0m" << endl;
-                        returnMenuFunction();
                         break;
                     }
 
@@ -649,26 +602,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
                         inventory, inventoryCount,
                         objectives, emergencyTripsLeft);
 
-                    if (energy <= 0 || time <= 0)
-                    {
-                        objectives[OBJ_MISSION_FAILED] = true;
-                        playing = false;
-
-                        cout << "\033[31mMISSION FAILED!" << endl;
-
-                        if (energy <= 0)
-                        {
-                            cout << "Your Energy has run out." << endl;
-                        }
-
-                        if (time <= 0)
-                        {
-                            cout << "Your Time has run out." << endl;
-                        }
-
-                        cout << "\033[0m";
-                    }
-                    else if (collected)
+                    if (collected)
                     {
                         cout << "\033[32mCollection performed.\033[0m" << endl;
                     }
@@ -676,7 +610,6 @@ void runSimulation(int &playerFloor, int &playerRoom,
                     {
                         cout << "\033[31mCannot collect that item.\033[0m" << endl;
                     }
-                    returnMenuFunction();
                     break;
                 }
 
@@ -695,7 +628,6 @@ void runSimulation(int &playerFloor, int &playerRoom,
                         cin.ignore(10000, '\n');
 
                         cout << "\033[31mInvalid input.\033[0m" << endl;
-                        returnMenuFunction();
                         break;
                     }
 
@@ -719,43 +651,24 @@ void runSimulation(int &playerFloor, int &playerRoom,
 
                         used = handleUseCommand(itemSymbol, playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, objectives);
                     }
-                    if (energy <= 0 || time <= 0)
-                    {
-                        objectives[OBJ_MISSION_FAILED] = true;
-                        playing = false;
-
-                        cout << "\033[31mMISSION FAILED!" << endl;
-
-                        if (energy <= 0)
-                            cout << "Your Energy has run out." << endl;
-
-                        if (time <= 0)
-                            cout << "Your Time has run out." << endl;
-
-                        cout << "\033[0m";
-                    }
-                    else if (!used)
+                    if (!used)
                     {
                         cout << "\033[31mCannot use that item here, "
                              << "or its requirements are not satisfied.\033[0m"
                              << endl;
                     }
 
-                    returnMenuFunction();
                     break;
                 }
 
                 case 5:
                     renderDashboard(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, emergencyTripsLeft);
-                    returnMenuFunction();
                     break;
                 case 6:
                     renderAsciiBuilding(playerFloor, playerRoom);
-                    returnMenuFunction();
                     break;
                 case 7:
                     renderObjectivesChecklist(objectives);
-                    returnMenuFunction();
                     break;
                 }
 
@@ -763,12 +676,18 @@ void runSimulation(int &playerFloor, int &playerRoom,
                 if (!playing)
                     break;
 
-                    if(checkEndConditions(energy, time, objectives)){
-                        playing = false;
-                         if (energy <= 0 || time <= 0)
+                if (checkEndConditions(energy, time, objectives))
+                {
+                    playing = false;
+                    if (energy <= 0 || time <= 0)
                     {
                         objectives[OBJ_MISSION_FAILED] = true;
-                        cout << "\033[31mMISSION FAILED!\033[0m" << endl;
+                        cout << "\033[31mMISSION FAILED!" << endl;
+                        if (energy <= 0)
+                            cout << "Your Energy has run out." << endl;
+                        if (time <= 0)
+                            cout << "Your Time has run out." << endl;
+                        cout << "\033[0m";
                     }
                     else
                     {
@@ -777,8 +696,8 @@ void runSimulation(int &playerFloor, int &playerRoom,
                         cout << "\033[32mMISSION WON! +"
                              << SCORE_MISSION_VICTORY << " points.\033[0m" << endl;
                     }
-                    }
-                     returnMenuFunction();
+                }
+                returnMenuFunction();
             }
 
             // renderDashboard(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, emergencyTripsLeft);

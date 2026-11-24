@@ -343,6 +343,62 @@ bool handleUseCommand(char itemSymbol, int currentFloor, int currentRoom,
     return true;
 }
 
+bool handleUnlockCabinetCommand(const char *code, int currentFloor, int currentRoom,
+                                bool objectives[NUM_OBJECTIVES], int &score,
+                                char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
+                                int &entityCount, int &energy, int &time)
+{
+    if (currentRoom != 1 || currentFloor != 5)
+    {
+        cout << "\033[31mInvalid Room to unlock cabinet.\033[0m" << endl;
+        return false;
+    }
+    if (entityCount < 0 || entityCount > MAX_ENTITIES_PER_ROOM)
+    {
+        cout << "\033[31mYour Inventory has undefined behavior.\033[0m" << endl;
+        return false;
+    }
+    if (objectives[OBJ_CABINET_UNLOCKED])
+    {
+        cout << "\033[31mCabinet ALready Unlocked.\033[0m" << endl;
+        return false;
+    }
+
+    bool cabinetFound = false;
+
+    for (int i = 0; i < entityCount; i++)
+    {
+        if (roomEntities[currentFloor - 1][currentRoom - 1][i] == ENT_CABINET_TRAIN_KEY)
+        {
+            cabinetFound = true;
+            break;
+        }
+    }
+
+    if (!cabinetFound)
+    {
+        cout << "\033[31mNo cabinet found in this room.\033[0m" << endl;
+        return false;
+    }
+
+    if (!verifyCabinetCode(code, objectives))
+    {
+        cout << "\033[31mIncorrect Unlock COde entered. PLease Enter a valid code..\033[0m" << endl;
+        return false;
+    }
+
+    applyResourceDelta(energy, time, COST_ITEM_USE_ENERGY, COST_ITEM_USE_TIME);
+    if (energy <= 0 || time <= 0)
+        return true;
+
+    objectives[OBJ_CABINET_UNLOCKED] = true;
+    applyScoreDelta(score, SCORE_CABINET_UNLOCK);
+
+    cout << "\033[32mCabinet unlocked! Collect the Train Key."
+         << "\033[0m" << endl;
+
+    return true;
+}
 void runSimulation(int &playerFloor, int &playerRoom,
                    int &energy, int &time, int &score,
                    char inventory[MAX_INVENTORY_CAPACITY], int &inventoryCount,
@@ -626,7 +682,24 @@ void runSimulation(int &playerFloor, int &playerRoom,
                         break;
                     }
 
-                    bool used = handleUseCommand(itemSymbol, playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, objectives);
+                    bool used;
+
+                    if (itemSymbol == ENT_CABINET_TRAIN_KEY && playerFloor == 5 && playerRoom == 1)
+                    {
+                        string code;
+                        cout << "Enter the cabinet code > ";
+                        if (!(cin >> code))
+                            return;
+
+                        used = handleUnlockCabinetCommand(
+                            code.c_str(), playerFloor, playerRoom,
+                            objectives, score, roomEntities,
+                            entityCounts[playerFloor - 1][playerRoom - 1],
+                            energy, time);
+                    }else{
+
+                    used = handleUseCommand(itemSymbol, playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, objectives);
+                    }
                     if (energy <= 0 || time <= 0)
                     {
                         objectives[OBJ_MISSION_FAILED] = true;

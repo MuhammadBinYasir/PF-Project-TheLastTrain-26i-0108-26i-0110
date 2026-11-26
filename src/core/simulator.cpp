@@ -443,7 +443,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
             if (!initialization)
             {
                 cout << "\033[31mCould not initialize the new game.\033[0m" << endl;
-                break;
+                continue;
             }
             else
             {
@@ -491,239 +491,20 @@ void runSimulation(int &playerFloor, int &playerRoom,
                 }
             }
 
-            bool playing = true;
-            while (playing)
-            {
-                clearScreen();
-
-                cout << "What You can Do? " << endl;
-                cout << "1. Move" << endl
-                     << "2. Inspect room" << endl
-                     << "3. Collect item" << endl
-                     << "4. Use item / interact" << endl
-                     << "5. Show current state" << endl
-                     << "6. Show map" << endl
-                     << "7. Show objectives" << endl
-                     << "8. Save game" << endl
-                     << "0. Return to main menu" << endl;
-
-                int in;
-                while (true)
-                {
-                    cout << "\033[35mEnter What you want to do > \033[0m";
-                    cin >> in;
-                    if (in < 0 || in > 8 || cin.fail())
-                    {
-                        cin.clear();
-                        cin.ignore(10000, '\n');
-                        cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m" << endl;
-                        continue;
-                    }
-                    break;
-                }
-
-                switch (in)
-                {
-                case 0:
-                    playing = false;
-                    clearScreen();
-                    break;
-                case 1:
-                {
-                    int floor, room;
-                    cout << "\033[35mEnter Destination Floor (1-5) > \033[0m";
-                    cin >> floor;
-                    if (cin.fail())
-                    {
-                        cin.clear();
-                        cin.ignore(10000, '\n');
-                        cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m" << endl;
-                        continue;
-                    }
-                    cout << "\033[35mEnter Destination Room (1-4) > \033[0m";
-                    cin >> room;
-
-                    if (cin.fail())
-                    {
-                        cin.clear();
-                        cin.ignore(10000, '\n');
-                        cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m" << endl;
-                        continue;
-                    }
-
-                    bool movement = handleMoveCommand(floor, room, playerFloor, playerRoom, energy, time, horizontalConn, inventory, inventoryCount, emergencyTripsLeft, objectives[OBJ_FUSE_INSTALLED]);
-                    if (movement)
-                    {
-                        cout << endl
-                             << "\033[32m-> MOVED! You are Now at F" << playerFloor << "-R" << playerRoom << ". \033[0m" << endl
-                             << endl;
-                    }
-                    else
-                    {
-                        cout << "\033[31mInvalid Input. You cannot Move to that room!.\033[0m" << endl;
-                    }
-
-                    break;
-                }
-                case 2:
-                { // renderRoomDetails(playerFloor, playerRoom, roomEntities, entityCounts[playerFloor - 1][playerRoom - 1]);
-                    bool res = handleInspectCommand(playerFloor, playerRoom, energy, time, roomEntities, entityCounts[playerFloor - 1][playerRoom - 1], objectives, score);
-
-                    if (!res)
-                    {
-                        cout << "\033[31mCould not inspect this room.\033[0m"
-                             << endl;
-                    }
-                    break;
-                }
-
-                case 3:
-                {
-                    char itemSymbol;
-
-                    cout << "Enter the symbol of the item to collect > ";
-                    cin >> itemSymbol;
-
-                    if (cin.fail())
-                    {
-                        cin.clear();
-                        cin.ignore(10000, '\n');
-
-                        cout << "\033[31mInvalid input.\033[0m" << endl;
-                        break;
-                    }
-
-                    bool collected = handleCollectCommand(
-                        itemSymbol,
-                        playerFloor, playerRoom,
-                        energy, time, score,
-                        roomEntities,
-                        entityCounts[playerFloor - 1][playerRoom - 1],
-                        inventory, inventoryCount,
-                        objectives, emergencyTripsLeft);
-
-                    if (collected)
-                    {
-                        cout << "\033[32mCollection performed.\033[0m" << endl;
-                    }
-                    else
-                    {
-                        cout << "\033[31mCannot collect that item.\033[0m" << endl;
-                    }
-                    break;
-                }
-
-                case 4:
-                {
-
-                    char itemSymbol;
-                    cout << "\033[35mEnter the item symbol to use > \033[0m";
-                    cin >> itemSymbol;
-                    if (cin.fail())
-                    {
-                        if (cin.eof())
-                            return;
-
-                        cin.clear();
-                        cin.ignore(10000, '\n');
-
-                        cout << "\033[31mInvalid input.\033[0m" << endl;
-                        break;
-                    }
-
-                    bool used;
-
-                    if (itemSymbol == ENT_CABINET_TRAIN_KEY && playerFloor == 5 && playerRoom == 1)
-                    {
-                        string code;
-                        cout << "Enter the cabinet code > ";
-                        if (!(cin >> code))
-                            return;
-
-                        used = handleUnlockCabinetCommand(
-                            code.c_str(), playerFloor, playerRoom,
-                            objectives, score, roomEntities,
-                            entityCounts[playerFloor - 1][playerRoom - 1],
-                            energy, time);
-                    }
-                    else
-                    {
-
-                        used = handleUseCommand(itemSymbol, playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, objectives);
-                    }
-                    if (!used)
-                    {
-                        cout << "\033[31mCannot use that item here, "
-                             << "or its requirements are not satisfied.\033[0m"
-                             << endl;
-                    }
-
-                    break;
-                }
-
-                case 5:
-                    renderDashboard(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, emergencyTripsLeft);
-                    break;
-                case 6:
-                    renderAsciiBuilding(playerFloor, playerRoom);
-                    break;
-                case 7:
-                    renderObjectivesChecklist(objectives);
-                    break;
-
-                case 8:
-                {
-                    if (saveGameStateToFile("out/savegame.txt", playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, objectives, emergencyTripsLeft, roomEntities, entityCounts))
-                    {
-                        cout << "\033[32mGAME SAVED Successfuly!\033[0m" << endl;
-                    }
-                    else
-                    {
-                        cout << "\033[31mError While Storing data!\033[0m" << endl;
-                    }
-                    break;
-                }
-
-                }
-
-
-
-                if (!playing)
-                    break;
-
-                if (checkEndConditions(energy, time, objectives))
-                {
-                    playing = false;
-                    if (energy <= 0 || time <= 0)
-                    {
-                        objectives[OBJ_MISSION_FAILED] = true;
-                        cout << "\033[31mMISSION FAILED!" << endl;
-                        if (energy <= 0)
-                            cout << "Your Energy has run out." << endl;
-                        if (time <= 0)
-                            cout << "Your Time has run out." << endl;
-                        cout << "\033[0m";
-                    }
-                    else
-                    {
-                        objectives[OBJ_MISSION_WON] = true;
-                        applyScoreDelta(score, SCORE_MISSION_VICTORY);
-                        cout << "\033[32mMISSION WON! +"
-                             << SCORE_MISSION_VICTORY << " points.\033[0m" << endl;
-                    }
-                }
-                returnMenuFunction();
-            }
-
-            // renderDashboard(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, emergencyTripsLeft);
-            // renderRoomDetails(playerFloor, playerRoom, roomEntities, entityCounts[playerFloor - 1][playerRoom - 1]);
-            // renderAsciiBuilding(playerFloor, playerRoom);
-            // renderObjectivesChecklist(objectives);
             break;
         }
         case 2:
-            cout << "Loading Saved Game...." << endl;
+        {
+            if (!loadGameStateFromFile("out/savegame.txt", playerFloor, playerRoom,
+                                       energy, time, score, inventory, inventoryCount,
+                                       objectives, emergencyTripsLeft, roomEntities, entityCounts))
+            {
+                cout << "\033[31mCould not load the saved game.\033[0m" << endl;
+                returnMenuFunction();
+                continue;
+            }
             break;
+        }
         case 3:
         {
             clearScreen();
@@ -736,7 +517,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
 
             returnMenuFunction();
 
-            break;
+            continue;
         }
 
         case 4:
@@ -746,7 +527,231 @@ void runSimulation(int &playerFloor, int &playerRoom,
         default:
             cout << "Invalid Choice. Please Enter Valid Answer" << endl;
             dispalyMenu();
-            break;
+            continue;
+        }
+
+        bool playing = true;
+        while (playing)
+        {
+            clearScreen();
+
+            cout << "What You can Do? " << endl;
+            cout << "1. Move" << endl
+                 << "2. Inspect room" << endl
+                 << "3. Collect item" << endl
+                 << "4. Use item / interact" << endl
+                 << "5. Show current state" << endl
+                 << "6. Show map" << endl
+                 << "7. Show objectives" << endl
+                 << "8. Save game" << endl
+                 << "0. Return to main menu" << endl;
+
+            int in;
+            while (true)
+            {
+                cout << "\033[35mEnter What you want to do > \033[0m";
+                cin >> in;
+                if (in < 0 || in > 8 || cin.fail())
+                {
+                    cin.clear();
+                    cin.ignore(10000, '\n');
+                    cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m" << endl;
+                    continue;
+                }
+                break;
+            }
+
+            switch (in)
+            {
+            case 0:
+                playing = false;
+                clearScreen();
+                break;
+            case 1:
+            {
+                int floor, room;
+                cout << "\033[35mEnter Destination Floor (1-5) > \033[0m";
+                cin >> floor;
+                if (cin.fail())
+                {
+                    cin.clear();
+                    cin.ignore(10000, '\n');
+                    cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m" << endl;
+                    continue;
+                }
+                cout << "\033[35mEnter Destination Room (1-4) > \033[0m";
+                cin >> room;
+
+                if (cin.fail())
+                {
+                    cin.clear();
+                    cin.ignore(10000, '\n');
+                    cout << "\033[31mInvalid Input. Please Enter Valid Answer.\033[0m" << endl;
+                    continue;
+                }
+
+                bool movement = handleMoveCommand(floor, room, playerFloor, playerRoom, energy, time, horizontalConn, inventory, inventoryCount, emergencyTripsLeft, objectives[OBJ_FUSE_INSTALLED]);
+                if (movement)
+                {
+                    cout << endl
+                         << "\033[32m-> MOVED! You are Now at F" << playerFloor << "-R" << playerRoom << ". \033[0m" << endl
+                         << endl;
+                }
+                else
+                {
+                    cout << "\033[31mInvalid Input. You cannot Move to that room!.\033[0m" << endl;
+                }
+
+                break;
+            }
+            case 2:
+            { // renderRoomDetails(playerFloor, playerRoom, roomEntities, entityCounts[playerFloor - 1][playerRoom - 1]);
+                bool res = handleInspectCommand(playerFloor, playerRoom, energy, time, roomEntities, entityCounts[playerFloor - 1][playerRoom - 1], objectives, score);
+
+                if (!res)
+                {
+                    cout << "\033[31mCould not inspect this room.\033[0m"
+                         << endl;
+                }
+                break;
+            }
+
+            case 3:
+            {
+                char itemSymbol;
+
+                cout << "Enter the symbol of the item to collect > ";
+                cin >> itemSymbol;
+
+                if (cin.fail())
+                {
+                    cin.clear();
+                    cin.ignore(10000, '\n');
+
+                    cout << "\033[31mInvalid input.\033[0m" << endl;
+                    break;
+                }
+
+                bool collected = handleCollectCommand(
+                    itemSymbol,
+                    playerFloor, playerRoom,
+                    energy, time, score,
+                    roomEntities,
+                    entityCounts[playerFloor - 1][playerRoom - 1],
+                    inventory, inventoryCount,
+                    objectives, emergencyTripsLeft);
+
+                if (collected)
+                {
+                    cout << "\033[32mCollection performed.\033[0m" << endl;
+                }
+                else
+                {
+                    cout << "\033[31mCannot collect that item.\033[0m" << endl;
+                }
+                break;
+            }
+
+            case 4:
+            {
+
+                char itemSymbol;
+                cout << "\033[35mEnter the item symbol to use > \033[0m";
+                cin >> itemSymbol;
+                if (cin.fail())
+                {
+                    if (cin.eof())
+                        return;
+
+                    cin.clear();
+                    cin.ignore(10000, '\n');
+
+                    cout << "\033[31mInvalid input.\033[0m" << endl;
+                    break;
+                }
+
+                bool used;
+
+                if (itemSymbol == ENT_CABINET_TRAIN_KEY && playerFloor == 5 && playerRoom == 1)
+                {
+                    string code;
+                    cout << "Enter the cabinet code > ";
+                    if (!(cin >> code))
+                        return;
+
+                    used = handleUnlockCabinetCommand(
+                        code.c_str(), playerFloor, playerRoom,
+                        objectives, score, roomEntities,
+                        entityCounts[playerFloor - 1][playerRoom - 1],
+                        energy, time);
+                }
+                else
+                {
+
+                    used = handleUseCommand(itemSymbol, playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, objectives);
+                }
+                if (!used)
+                {
+                    cout << "\033[31mCannot use that item here, "
+                         << "or its requirements are not satisfied.\033[0m"
+                         << endl;
+                }
+
+                break;
+            }
+
+            case 5:
+                renderDashboard(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, emergencyTripsLeft);
+                break;
+            case 6:
+                renderAsciiBuilding(playerFloor, playerRoom);
+                break;
+            case 7:
+                renderObjectivesChecklist(objectives);
+                break;
+
+            case 8:
+            {
+                if (saveGameStateToFile("out/savegame.txt", playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, objectives, emergencyTripsLeft, roomEntities, entityCounts))
+                {
+                    cout << "\033[32mGAME SAVED Successfuly!\033[0m" << endl;
+                }
+                else
+                {
+                    cout << "\033[31mError While Storing data!\033[0m" << endl;
+                }
+                break;
+            }
+
+            }
+
+
+
+            if (!playing)
+                break;
+
+            if (checkEndConditions(energy, time, objectives))
+            {
+                playing = false;
+                if (energy <= 0 || time <= 0)
+                {
+                    objectives[OBJ_MISSION_FAILED] = true;
+                    cout << "\033[31mMISSION FAILED!" << endl;
+                    if (energy <= 0)
+                        cout << "Your Energy has run out." << endl;
+                    if (time <= 0)
+                        cout << "Your Time has run out." << endl;
+                    cout << "\033[0m";
+                }
+                else
+                {
+                    objectives[OBJ_MISSION_WON] = true;
+                    applyScoreDelta(score, SCORE_MISSION_VICTORY);
+                    cout << "\033[32mMISSION WON! +"
+                         << SCORE_MISSION_VICTORY << " points.\033[0m" << endl;
+                }
+            }
+            returnMenuFunction();
         }
     }
 }

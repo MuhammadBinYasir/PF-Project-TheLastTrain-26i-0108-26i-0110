@@ -670,7 +670,22 @@ void runSimulation(int &playerFloor, int &playerRoom,
                 case 7:
                     renderObjectivesChecklist(objectives);
                     break;
+
+                case 8:
+                {
+                    if (saveGameStateToFile("out/savegame.txt", playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, objectives, emergencyTripsLeft, roomEntities, entityCounts))
+                    {
+                        cout << "\033[32mGAME SAVED Successfuly!\033[0m" << endl;
+                    }
+                    else
+                    {
+                        cout << "\033[31mError While Storing data!\033[0m" << endl;
+                    }
+                    break;
                 }
+
+                }
+
 
 
                 if (!playing)

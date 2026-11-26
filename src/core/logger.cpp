@@ -146,6 +146,7 @@ bool loadGameStateFromFile(const char *filename,
     int loadedInventoryCount = -1;
     bool hasFloor = false, hasRoom = false, hasEnergy = false, hasTime = false, hasScore = false;
     int roomsLoaded = 0;
+    bool roomSeen[NUM_FLOORS][ROOMS_PER_FLOOR] = {};
 
     string line;
     try
@@ -237,6 +238,10 @@ bool loadGameStateFromFile(const char *filename,
                 int r = (key[9] - '0') - 1;
                 if (f < 0 || f >= NUM_FLOORS || r < 0 || r >= ROOMS_PER_FLOOR)
                     return false;
+
+                if (roomSeen[f][r])
+                    return false;
+                roomSeen[f][r] = true;
 
                 int count = value[0] - '0';
                 if (count < 0 || count > MAX_ENTITIES_PER_ROOM)

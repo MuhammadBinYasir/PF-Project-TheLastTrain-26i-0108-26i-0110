@@ -48,6 +48,8 @@ int usersMenu()
         cout << "\033[35mEnter Your Choice > \033[0m";
 
         cin >> userChoice;
+        if (cin.fail() && cin.eof())
+            return 4;
         if (cin.fail() || userChoice < 1 || userChoice > 4)
         {
             cin.clear();
@@ -97,7 +99,9 @@ bool returnMenuFunction()
     {
         cout << "\033[35mEnter -1 to Move Back to Main Menu > \033[0m";
         cin >> in;
-        if (in != -1 || cin.fail())
+        if (cin.fail() && cin.eof())
+            return false;
+        if (cin.fail() || in != -1)
         {
             cin.clear();
             cin.ignore(10000, '\n');
@@ -222,14 +226,14 @@ bool handleCollectCommand(char itemSymbol, int currentFloor, int currentRoom,
         if (inventoryCount < 0 || inventoryCount >= MAX_INVENTORY_CAPACITY)
             return false;
 
-        if (itemSymbol == ENT_CABINET_TRAIN_KEY &&
-            !objectives[OBJ_CABINET_UNLOCKED])
+        if (itemSymbol == ENT_CABINET_TRAIN_KEY && !objectives[OBJ_CABINET_UNLOCKED])
         {
             return false;
         }
 
         if (!addItem(inventory, inventoryCount, itemSymbol))
             return false;
+        applyResourceDelta(energy, time, COST_ITEM_PICKUP_ENERGY, COST_ITEM_PICKUP_TIME);
     }
     else if (itemSymbol != ENT_ENERGY_PACK && itemSymbol != ENT_EMERGENCY_TOOLKIT && itemSymbol != ENT_OBSERVATION_TOKEN)
         return false;
@@ -238,10 +242,9 @@ bool handleCollectCommand(char itemSymbol, int currentFloor, int currentRoom,
     {
         roomEntities[currentFloor - 1][currentRoom - 1][i] = roomEntities[currentFloor - 1][currentRoom - 1][i + 1];
     }
+
     entityCount--;
     roomEntities[currentFloor - 1][currentRoom - 1][entityCount] = ENT_NONE;
-
-    applyResourceDelta(energy, time, COST_ITEM_PICKUP_ENERGY, COST_ITEM_PICKUP_TIME);
 
     if (energy <= 0 || time <= 0)
         return true;
@@ -306,8 +309,17 @@ bool handleUseCommand(char itemSymbol, int currentFloor, int currentRoom,
         return false;
     else if (itemSymbol == ENT_CAT_CARRIER && (currentFloor != 3 || currentRoom != 3 || objectives[OBJ_CAT_SECURED]))
         return false;
-    else if (itemSymbol == ENT_CABINET_TRAIN_KEY && (currentFloor != 5 || currentRoom != 2 || !objectives[OBJ_CAT_SECURED] || !objectives[OBJ_PASSENGER_RESCUED] || objectives[OBJ_TRAIN_PREPARED]))
-        return false;
+    else if (itemSymbol == ENT_CABINET_TRAIN_KEY)
+    {
+        if (currentFloor != 5 || currentRoom != 2 || objectives[OBJ_TRAIN_PREPARED])
+            return false;
+
+        for (int i = 0; i < OBJ_TRAIN_PREPARED; i++)
+        {
+            if (!objectives[i])
+                return false;
+        }
+    }
     else if (itemSymbol != ENT_FUSE && itemSymbol != ENT_MEDICAL_KIT && itemSymbol != ENT_CAT_CARRIER && itemSymbol != ENT_CABINET_TRAIN_KEY)
         return false;
 
@@ -402,7 +414,8 @@ bool handleUnlockCabinetCommand(const char *code, int currentFloor, int currentR
 
 bool checkEndConditions(int energy, int time, const bool objectives[NUM_OBJECTIVES])
 {
-    if (energy <= 0 || time <= 0) return true;
+    if (energy <= 0 || time <= 0)
+        return true;
 
     for (int i = 0; i <= OBJ_TRAIN_PREPARED; i++)
     {
@@ -456,7 +469,9 @@ void runSimulation(int &playerFloor, int &playerRoom,
 
                 cout << "\033[35mEnter Floor (1-5) > \033[0m";
                 cin >> floor;
-                if (floor < 1 || floor > 5 || cin.fail())
+                if (cin.fail() && cin.eof())
+                    return;
+                if (cin.fail() || floor < 1 || floor > 5)
                 {
                     cin.clear();
                     cin.ignore(10000, '\n');
@@ -465,8 +480,10 @@ void runSimulation(int &playerFloor, int &playerRoom,
                 }
                 cout << "\033[35mEnter Starting Room (1-4) > \033[0m";
                 cin >> room;
+                if (cin.fail() && cin.eof())
+                    return;
 
-                if (room < 1 || room > 4 || cin.fail())
+                if (cin.fail() || room < 1 || room > 4)
                 {
                     cin.clear();
                     cin.ignore(10000, '\n');
@@ -500,7 +517,8 @@ void runSimulation(int &playerFloor, int &playerRoom,
                                        objectives, emergencyTripsLeft, roomEntities, entityCounts))
             {
                 cout << "\033[31mCould not load the saved game.\033[0m" << endl;
-                returnMenuFunction();
+                if (!returnMenuFunction())
+                return;
                 continue;
             }
             break;
@@ -515,7 +533,8 @@ void runSimulation(int &playerFloor, int &playerRoom,
             cout << "2. Find clues and unlock the cabinet." << endl;
             cout << "3. Restore the lift and board the train." << endl;
 
-            returnMenuFunction();
+            if (!returnMenuFunction())
+                return;
 
             continue;
         }
@@ -551,7 +570,9 @@ void runSimulation(int &playerFloor, int &playerRoom,
             {
                 cout << "\033[35mEnter What you want to do > \033[0m";
                 cin >> in;
-                if (in < 0 || in > 8 || cin.fail())
+                if (cin.fail() && cin.eof())
+                    return;
+                if (cin.fail() || in < 0 || in > 8)
                 {
                     cin.clear();
                     cin.ignore(10000, '\n');
@@ -572,6 +593,8 @@ void runSimulation(int &playerFloor, int &playerRoom,
                 int floor, room;
                 cout << "\033[35mEnter Destination Floor (1-5) > \033[0m";
                 cin >> floor;
+                if (cin.fail() && cin.eof())
+                    return;
                 if (cin.fail())
                 {
                     cin.clear();
@@ -581,6 +604,8 @@ void runSimulation(int &playerFloor, int &playerRoom,
                 }
                 cout << "\033[35mEnter Destination Room (1-4) > \033[0m";
                 cin >> room;
+                if (cin.fail() && cin.eof())
+                    return;
 
                 if (cin.fail())
                 {
@@ -622,6 +647,8 @@ void runSimulation(int &playerFloor, int &playerRoom,
 
                 cout << "Enter the symbol of the item to collect > ";
                 cin >> itemSymbol;
+                if (cin.fail() && cin.eof())
+                    return;
 
                 if (cin.fail())
                 {
@@ -722,10 +749,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
                 }
                 break;
             }
-
             }
-
-
 
             if (!playing)
                 break;
@@ -750,9 +774,10 @@ void runSimulation(int &playerFloor, int &playerRoom,
                     cout << "\033[32mMISSION WON! +"
                          << SCORE_MISSION_VICTORY << " points.\033[0m" << endl;
                 }
-                    writeGameSummaryReport("out/game_summary.txt", score, energy, time, objectives, objectives[OBJ_MISSION_WON]);
+                writeGameSummaryReport("out/game_summary.txt", score, energy, time, objectives, objectives[OBJ_MISSION_WON]);
             }
-            returnMenuFunction();
+            if (!returnMenuFunction())
+                return;
         }
     }
 }

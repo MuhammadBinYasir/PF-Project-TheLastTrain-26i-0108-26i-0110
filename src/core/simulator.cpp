@@ -750,6 +750,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
                     cout << "\033[32mMISSION WON! +"
                          << SCORE_MISSION_VICTORY << " points.\033[0m" << endl;
                 }
+                    writeGameSummaryReport("out/summary.txt", score, energy, time, objectives, objectives[OBJ_MISSION_WON]);
             }
             returnMenuFunction();
         }

@@ -8,8 +8,15 @@
 #include <string>
 #include <iomanip>
 #include "level.h"
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#else
 #include <chrono>
 #include <thread>
+#endif
 using namespace std;
 
 // Modular simulation loop using primitive variables
@@ -511,6 +518,15 @@ void showResultScreen(bool won, int score, int energy, int time)
     printBorder(color);
 }
 
+static void pauseMilliseconds(int milliseconds)
+{
+#ifdef _WIN32
+    Sleep(milliseconds);
+#else
+    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+#endif
+}
+
 void showSplashScreen()
 {
     clearScreen();
@@ -539,11 +555,11 @@ void showSplashScreen()
              << "[" << string(filled, '#') << string(barWidth - filled, '-') << "] "
              << right << setw(3) << filled * 100 / barWidth << "%" << flush;
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(65));
+        pauseMilliseconds(65);
     }
 
     cout << "\033[0m" << endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    pauseMilliseconds(300);
     clearScreen();
 }
 
@@ -577,7 +593,7 @@ const string messages[] = {
         printBoxLine("", textColor);
         printBorder(headerColor);
 
-        std::this_thread::sleep_for(std::chrono::seconds(2));
+        pauseMilliseconds(2000);
     }
 }
 

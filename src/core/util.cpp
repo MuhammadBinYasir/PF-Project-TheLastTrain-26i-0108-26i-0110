@@ -45,9 +45,12 @@ void trimWhitespace(char* str){
 
 void clearScreen()
 {
+#ifdef _WIN32
     system("cls");
+#else
+    cout << "\033[2J\033[H" << flush;
+#endif
 }
-
 void printHeader(const char* title){
 
     cout << endl << "\033[32m==== " << title << " ====\033[0m" << endl;

@@ -91,7 +91,7 @@ bool saveGameStateToFile(const char *filename,
     }
 
     file.close();
-    return true;
+    return !file.fail();
 }
 
 // Helper function to convert "YES" or "NO" back to boolean
@@ -125,7 +125,6 @@ bool loadGameStateFromFile(const char *filename,
     if (!file.is_open())
         return false;
 
-    
     inventoryCount = 0;
     for (int i = 0; i < MAX_INVENTORY_CAPACITY; i++)
         inventory[i] = ENT_NONE;
@@ -159,6 +158,43 @@ bool loadGameStateFromFile(const char *filename,
 
             string key = line.substr(0, pos);
             string value = (pos + 2 <= line.length()) ? line.substr(pos + 2) : "";
+
+            if (value.empty())
+                return false;
+
+            if (key == "PLAYER_FLOOR" || key == "PLAYER_ROOM" ||
+                key == "ENERGY" || key == "TIME" || key == "SCORE" ||
+                key == "EMERGENCY_TRIPS_LEFT" || key == "INVENTORY_COUNT")
+            {
+                if (value.empty())
+                    return false;
+
+                for (char ch : value)
+                {
+                    if (ch < '0' || ch > '9')
+                        return false;
+                }
+
+                int number = stoi(value);
+
+                if (key == "PLAYER_FLOOR" && (number < 1 || number > NUM_FLOORS))
+                    return false;
+
+                if (key == "PLAYER_ROOM" && (number < 1 || number > ROOMS_PER_FLOOR))
+                    return false;
+
+                if (key == "ENERGY" && (number < 1 || number > MAX_ENERGY))
+                    return false;
+
+                if (key == "TIME" && (number < 1 || number > MAX_TIME))
+                    return false;
+
+                if (key == "EMERGENCY_TRIPS_LEFT" && number > 3)
+                    return false;
+
+                if (key == "INVENTORY_COUNT" && number > MAX_INVENTORY_CAPACITY)
+                    return false;
+            }
 
             if (key == "GAME_STATUS")
             {
@@ -215,22 +251,86 @@ bool loadGameStateFromFile(const char *filename,
                     }
                 }
             }
-            else if (key == "MASTER_KEY_COLLECTED") { if (!parseYesNo(value, objectives[OBJ_MASTER_KEY])) return false; }
-            else if (key == "CLUE_4")               { if (!parseYesNo(value, objectives[OBJ_CLUE_4])) return false; }
-            else if (key == "CLUE_2")               { if (!parseYesNo(value, objectives[OBJ_CLUE_2])) return false; }
-            else if (key == "CLUE_7")               { if (!parseYesNo(value, objectives[OBJ_CLUE_7])) return false; }
-            else if (key == "CABINET_UNLOCKED")     { if (!parseYesNo(value, objectives[OBJ_CABINET_UNLOCKED])) return false; }
-            else if (key == "TRAIN_KEY_COLLECTED")  { if (!parseYesNo(value, objectives[OBJ_TRAIN_KEY])) return false; }
-            else if (key == "FUSE_COLLECTED")       { if (!parseYesNo(value, objectives[OBJ_FUSE_COLLECTED])) return false; }
-            else if (key == "FUSE_INSTALLED")       { if (!parseYesNo(value, objectives[OBJ_FUSE_INSTALLED])) return false; }
-            else if (key == "LIFT_PASS_COLLECTED")  { if (!parseYesNo(value, objectives[OBJ_LIFT_PASS])) return false; }
-            else if (key == "LIFT2_ACTIVE")         { if (!parseYesNo(value, objectives[OBJ_LIFT2_ACTIVE])) return false; }
-            else if (key == "PASSENGER_RESCUED")    { if (!parseYesNo(value, objectives[OBJ_PASSENGER_RESCUED])) return false; }
-            else if (key == "CAT_CARRIER_COLLECTED"){ if (!parseYesNo(value, objectives[OBJ_CAT_CARRIER])) return false; }
-            else if (key == "CAT_RESCUED")          { if (!parseYesNo(value, objectives[OBJ_CAT_SECURED])) return false; }
-            else if (key == "TRAIN_PREPARED")       { if (!parseYesNo(value, objectives[OBJ_TRAIN_PREPARED])) return false; }
-            else if (key == "MISSION_WON")          { if (!parseYesNo(value, objectives[OBJ_MISSION_WON])) return false; }
-            else if (key == "MISSION_FAILED")       { if (!parseYesNo(value, objectives[OBJ_MISSION_FAILED])) return false; }
+            else if (key == "MASTER_KEY_COLLECTED")
+            {
+                if (!parseYesNo(value, objectives[OBJ_MASTER_KEY]))
+                    return false;
+            }
+            else if (key == "CLUE_4")
+            {
+                if (!parseYesNo(value, objectives[OBJ_CLUE_4]))
+                    return false;
+            }
+            else if (key == "CLUE_2")
+            {
+                if (!parseYesNo(value, objectives[OBJ_CLUE_2]))
+                    return false;
+            }
+            else if (key == "CLUE_7")
+            {
+                if (!parseYesNo(value, objectives[OBJ_CLUE_7]))
+                    return false;
+            }
+            else if (key == "CABINET_UNLOCKED")
+            {
+                if (!parseYesNo(value, objectives[OBJ_CABINET_UNLOCKED]))
+                    return false;
+            }
+            else if (key == "TRAIN_KEY_COLLECTED")
+            {
+                if (!parseYesNo(value, objectives[OBJ_TRAIN_KEY]))
+                    return false;
+            }
+            else if (key == "FUSE_COLLECTED")
+            {
+                if (!parseYesNo(value, objectives[OBJ_FUSE_COLLECTED]))
+                    return false;
+            }
+            else if (key == "FUSE_INSTALLED")
+            {
+                if (!parseYesNo(value, objectives[OBJ_FUSE_INSTALLED]))
+                    return false;
+            }
+            else if (key == "LIFT_PASS_COLLECTED")
+            {
+                if (!parseYesNo(value, objectives[OBJ_LIFT_PASS]))
+                    return false;
+            }
+            else if (key == "LIFT2_ACTIVE")
+            {
+                if (!parseYesNo(value, objectives[OBJ_LIFT2_ACTIVE]))
+                    return false;
+            }
+            else if (key == "PASSENGER_RESCUED")
+            {
+                if (!parseYesNo(value, objectives[OBJ_PASSENGER_RESCUED]))
+                    return false;
+            }
+            else if (key == "CAT_CARRIER_COLLECTED")
+            {
+                if (!parseYesNo(value, objectives[OBJ_CAT_CARRIER]))
+                    return false;
+            }
+            else if (key == "CAT_RESCUED")
+            {
+                if (!parseYesNo(value, objectives[OBJ_CAT_SECURED]))
+                    return false;
+            }
+            else if (key == "TRAIN_PREPARED")
+            {
+                if (!parseYesNo(value, objectives[OBJ_TRAIN_PREPARED]))
+                    return false;
+            }
+            else if (key == "MISSION_WON")
+            {
+                if (!parseYesNo(value, objectives[OBJ_MISSION_WON]))
+                    return false;
+            }
+            else if (key == "MISSION_FAILED")
+            {
+                if (!parseYesNo(value, objectives[OBJ_MISSION_FAILED]))
+                    return false;
+            }
             else if (key.rfind("ROOM_F", 0) == 0 && key.length() == 10 && key[7] == '_' && key[8] == 'R')
             {
                 // Format: ROOM_F<f>_R<r>: <count> <sym1> <sym2>...
@@ -295,7 +395,6 @@ void writeGameSummaryReport(const char *filename,
     if (!file.is_open())
         return;
 
-  
     file << "===========================================" << endl;
     file << "      THE LAST TRAIN - SESSION SUMMARY     " << endl;
     file << "===========================================" << endl;
@@ -303,13 +402,11 @@ void writeGameSummaryReport(const char *filename,
     file << "FINAL_SCORE: " << score << " / 520" << endl;
     file << endl;
 
-   
     file << "--- REMAINING RESOURCES ---" << endl;
     file << "REMAINING_ENERGY: " << remainingEnergy << " / " << MAX_ENERGY << endl;
     file << "REMAINING_TIME: " << remainingTime << " / " << MAX_TIME << endl;
     file << endl;
 
-    
     const char *objectiveNames[NUM_OBJECTIVES] = {
         "Master Key Collected",
         "Clue Digit 4 Discovered",
@@ -326,8 +423,7 @@ void writeGameSummaryReport(const char *filename,
         "Stranded Cat Secured",
         "Train Prepared & Boarded",
         "Mission Won",
-        "Mission Failed"
-    };
+        "Mission Failed"};
 
     int completedCount = 0;
     file << "--- OBJECTIVES CHECKLIST ---" << endl;
@@ -336,7 +432,6 @@ void writeGameSummaryReport(const char *filename,
         file << "[" << (objectives[i] ? "COMPLETED" : "INCOMPLETE") << "] "
              << objectiveNames[i] << endl;
 
-        
         if (i <= OBJ_TRAIN_PREPARED && objectives[i])
         {
             completedCount++;
@@ -344,11 +439,10 @@ void writeGameSummaryReport(const char *filename,
     }
     file << endl;
 
-    
     file << "--- SESSION AUDIT ---" << endl;
     file << "MILESTONES_COMPLETED: " << completedCount << " / 14" << endl;
-    file << "ENERGY_CONSUMED: " << (INITIAL_ENERGY - remainingEnergy) << endl;
-    file << "TIME_ELAPSED: " << (INITIAL_TIME - remainingTime) << endl;
+    file << "NET_ENERGY_CHANGE: " << remainingEnergy - INITIAL_ENERGY << endl;
+    file << "NET_TIME_CHANGE: " << remainingTime - INITIAL_TIME << endl;
 
     if (victory)
     {

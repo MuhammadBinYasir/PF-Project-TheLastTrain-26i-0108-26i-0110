@@ -105,7 +105,7 @@ void renderAsciiBuilding(int playerFloor, int playerRoom)
 void renderObjectivesChecklist(const bool objectives[NUM_OBJECTIVES])
 {
     const char *names[NUM_OBJECTIVES] = {
-        "Master Key collected", "Clue 1 discovered", "Clue 2 discovered", "Clue 3 discovered", "Cabinet unlocked",
+        "Master Key collected", "Clue 4 discovered", "Clue 2 discovered", "Clue 7 discovered", "Cabinet unlocked",
         "Train Key collected", "Fuse collected", "Fuse installed", "Lift Pass collected", "Lift 2 active", "Passenger rescued",
         "Cat Carrier collected", "Cat secured", "Train prepared", "Mission won", "Mission failed"};
 

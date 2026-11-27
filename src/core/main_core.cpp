@@ -39,10 +39,6 @@ int main() {
         return 1;
     }
 
-    cout << "===========================================\n";
-    cout << " THE LAST TRAIN - SIMULATION INITIALIZED   \n";
-    cout << "===========================================\n";
-
     runSimulation(playerFloor, playerRoom, energy, time, score,
                   inventory, inventoryCount, objectives, emergencyTripsLeft,
                   horizontalConn, roomEntities, entityCounts);

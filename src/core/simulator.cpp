@@ -12,31 +12,70 @@ using namespace std;
 
 // Modular simulation loop using primitive variables
 
+const int BOX_WIDTH = 110;
+
+void printBorder()
+{
+    cout << "\033[33m"
+         << "+" << string(BOX_WIDTH, '-') << "+"
+         << "\033[0m" << endl;
+}
+
+void printBoxLine(const string &text)
+{
+    cout << "\033[33m"
+         << "| " << left << setw(BOX_WIDTH - 2) << text << " |"
+         << "\033[0m" << endl;
+}
+
 void dispalyMenu()
 {
-    cout << "\033[34m"
-         << "==============================================================================================================\n"
-         << "=============     = === =     ======= ======   ===    =     =======     =    ===   ==     = === ==============\n"
-         << "=============== === === = =========== ===== === = ======= =========== === === = === === ===  == ==============\n"
-         << "=============== === === = =========== ===== === = ======= =========== === === = === === === = = ==============\n"
-         << "=============== ===     =    ======== =====     ==   ==== =========== ===    ==     === === = = ==============\n"
-         << "=============== === === = =========== ===== === ===== === =========== === = === === === === ==  ==============\n"
-         << "=============== === === = =========== ===== === ===== === =========== === == == === === === === ==============\n"
-         << "=============== === === =     =======     = === =    ==== =========== === === = === =     = === ==============\n"
-         << "==============================================================================================================\n"
-         << "\033[0m";
+    // cout << "\033[34m"
+    //      << "==============================================================================================================\n"
+    //      << "=============     = === =     ======= ======   ===    =     =======     =    ===   ==     = === ==============\n"
+    //      << "=============== === === = =========== ===== === = ======= =========== === === = === === ===  == ==============\n"
+    //      << "=============== === === = =========== ===== === = ======= =========== === === = === === === = = ==============\n"
+    //      << "=============== ===     =    ======== =====     ==   ==== =========== ===    ==     === === = = ==============\n"
+    //      << "=============== === === = =========== ===== === ===== === =========== === = === === === === ==  ==============\n"
+    //      << "=============== === === = =========== ===== === ===== === =========== === == == === === === === ==============\n"
+    //      << "=============== === === =     =======     = === =    ==== =========== === === = === =     = === ==============\n"
+    //      << "==============================================================================================================\n"
+    //      << "\033[0m";
 
-    cout << endl
-         << "1. Start New Game" << endl;
-    cout << "2. Load Saved Game" << endl;
-    cout << "3. Instructions Game" << endl;
-    cout << "4. Exit Game" << endl
-         << endl;
+    printBorder();
 
-    cout << "\033[34m"
-         << endl
-         << string(100, '=') << "\033[0m" << endl
-         << endl;
+    cout << "\033[30;43m" << setw(BOX_WIDTH) << ' ' << "\033[0m" << endl;
+
+    cout << "\033[30;43m" << left << setw(BOX_WIDTH)
+         << " ##### #   # #####     #       ###    ####  #####     ##### ####    ###   ##### #   # "
+         << "\033[0m" << endl;
+
+    cout << "\033[30;43m" << left << setw(BOX_WIDTH)
+         << "   #   #   # #         #      #   #  #        #         #   #   #  #   #    #   ##  # "
+         << "\033[0m" << endl;
+
+    cout << "\033[30;43m" << left << setw(BOX_WIDTH)
+         << "   #   ##### ####      #      #####   ###     #         #   ####   #####    #   # # # "
+         << "\033[0m" << endl;
+
+    cout << "\033[30;43m" << left << setw(BOX_WIDTH)
+         << "   #   #   # #         #      #   #      #    #         #   #  #   #   #    #   #  ## "
+         << "\033[0m" << endl;
+
+    cout << "\033[30;43m" << left << setw(BOX_WIDTH)
+         << "   #   #   # #####     #####  #   #  ####     #         #   #   #  #   #  ##### #   # "
+         << "\033[0m" << endl;
+
+    cout << "\033[30;43m" << setw(BOX_WIDTH) << ' ' << "\033[0m" << endl;
+
+    printBorder();
+
+    printBoxLine("1. Start New Game                      2. Load Saved Game");
+    cout << endl;
+    printBoxLine("3. Game Instructions");
+    cout << endl;
+    printBoxLine("4. Exit From Game");
+    printBorder();
 }
 
 int usersMenu()
@@ -518,7 +557,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
             {
                 cout << "\033[31mCould not load the saved game.\033[0m" << endl;
                 if (!returnMenuFunction())
-                return;
+                    return;
                 continue;
             }
             break;
@@ -554,16 +593,28 @@ void runSimulation(int &playerFloor, int &playerRoom,
         {
             clearScreen();
 
-            cout << "What You can Do? " << endl;
-            cout << "1. Move" << endl
-                 << "2. Inspect room" << endl
-                 << "3. Collect item" << endl
-                 << "4. Use item / interact" << endl
-                 << "5. Show current state" << endl
-                 << "6. Show map" << endl
-                 << "7. Show objectives" << endl
-                 << "8. Save game" << endl
-                 << "0. Return to main menu" << endl;
+            printBorder();
+
+            cout << "\033[30;43m" << setw(BOX_WIDTH) << ' ' << " |\033[0m" << endl;
+            cout << "\033[30;43m"
+                 << "| " << left << setw(BOX_WIDTH - 2)
+                 << "What actions you can perform:"
+                 << " |\033[0m" << endl;
+            cout << "\033[30;43m" << setw(BOX_WIDTH) << ' ' << " |\033[0m" << endl;
+            printBoxLine("");
+
+            cout << endl;
+            printBoxLine("1. Move                      5. Show current state");
+            cout << endl;
+            printBoxLine("2. Inspect room              6. Show map");
+            cout << endl;
+            printBoxLine("3. Collect item              7. Show objectives");
+            cout << endl;
+            printBoxLine("4. Use item / interact       8. Save game");
+            cout << endl;
+            printBoxLine("0. Return to main menu");
+
+            printBorder();
 
             int in;
             while (true)

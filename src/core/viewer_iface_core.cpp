@@ -68,7 +68,7 @@ void renderAsciiBuilding(int playerFloor, int playerRoom)
 
     if (!file.is_open())
     {
-        cout << "Could not open building map." << endl;
+        cout << "\033[31mCould not open building map.\033[0m" << endl;
         return;
     }
 

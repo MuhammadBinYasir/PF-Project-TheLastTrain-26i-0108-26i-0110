@@ -583,7 +583,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
             return;
 
         default:
-            cout << "Invalid Choice. Please Enter Valid Answer" << endl;
+            cout << "\033[31mInvalid Choice. Please Enter Valid Answer\033[0m" << endl;
             dispalyMenu();
             continue;
         }
@@ -696,7 +696,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
             {
                 char itemSymbol;
 
-                cout << "Enter the symbol of the item to collect > ";
+                cout << "\033[35mEnter the symbol of the item to collect > \033[0m";
                 cin >> itemSymbol;
                 if (cin.fail() && cin.eof())
                     return;
@@ -753,7 +753,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
                 if (itemSymbol == ENT_CABINET_TRAIN_KEY && playerFloor == 5 && playerRoom == 1)
                 {
                     string code;
-                    cout << "Enter the cabinet code > ";
+                    cout << "\033[35mEnter the cabinet code > \033[0m";
                     if (!(cin >> code))
                         return;
 

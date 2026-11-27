@@ -29,13 +29,13 @@ int main() {
     const char* initStateFile = "data/initial-state.txt";
 
     if (!loadBuildingMap(mapFile, horizontalConn, roomEntities, entityCounts)) {
-        cerr << "Error: Could not load " << mapFile << "\n";
+        cerr << "\033[31mError: Could not load " << mapFile << "\033[0m\n";
         return 1;
     }
 
     if (!loadInitialState(initStateFile, playerFloor, playerRoom, energy, time, score,
                           inventory, inventoryCount, objectives, emergencyTripsLeft)) {
-        cerr << "Error: Could not load " << initStateFile << "\n";
+        cerr << "\033[31mError: Could not load " << initStateFile << "\033[0m\n";
         return 1;
     }
 

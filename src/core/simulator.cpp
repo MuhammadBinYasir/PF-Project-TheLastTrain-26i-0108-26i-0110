@@ -14,16 +14,16 @@ using namespace std;
 
 const int BOX_WIDTH = 110;
 
-void printBorder()
+void printBorder(const string &color = "\033[33m")
 {
-    cout << "\033[33m"
+    cout << color
          << "+" << string(BOX_WIDTH, '-') << "+"
          << "\033[0m" << endl;
 }
 
-void printBoxLine(const string &text)
+void printBoxLine(const string &text, const string &color = "\033[33m")
 {
-    cout << "\033[33m"
+    cout << color
          << "| " << left << setw(BOX_WIDTH - 2) << text << " |"
          << "\033[0m" << endl;
 }
@@ -467,6 +467,51 @@ bool checkEndConditions(int energy, int time, const bool objectives[NUM_OBJECTIV
     return true;
 }
 
+void showResultScreen(bool won, int score, int energy, int time)
+{
+    clearScreen();
+
+    string title;
+    string message;
+    string color;
+    string background = won ? "\033[30;42m" : "\033[30;41m";
+
+    if (won)
+    {
+        title = "MISSION Completed!";
+        message = "You rescued the passenger and the cat and boarded the last train!";
+        color = "\033[32m";
+    }
+    else
+    {
+        title = "MISSION FAILED!";
+        color = "\033[31m";
+
+        if (energy <= 0 && time <= 0)
+            message = "You ran out of energy and time.";
+        else if (energy <= 0)
+            message = "You ran out of energy.";
+        else
+            message = "You ran out of time.";
+    }
+
+    printBorder(color);
+
+    cout << background << setw(BOX_WIDTH) << ' ' << " |\033[0m" << endl;
+    cout << background
+         << "| " << left << setw(BOX_WIDTH - 2)
+         << title
+         << " |\033[0m" << endl;
+    cout << background << setw(BOX_WIDTH) << ' ' << " |\033[0m" << endl;
+    printBorder(color);
+    printBoxLine(message, color);
+    printBorder(color);
+    printBoxLine("Final score       " + to_string(score) + " / 520", color);
+    printBoxLine("Energy remaining  " + to_string(energy), color);
+    printBoxLine("Time remaining    " + to_string(time), color);
+    printBorder(color);
+}
+
 void runSimulation(int &playerFloor, int &playerRoom,
                    int &energy, int &time, int &score,
                    char inventory[MAX_INVENTORY_CAPACITY], int &inventoryCount,
@@ -809,26 +854,19 @@ void runSimulation(int &playerFloor, int &playerRoom,
             {
                 playing = false;
                 if (energy <= 0 || time <= 0)
-                {
                     objectives[OBJ_MISSION_FAILED] = true;
-                    cout << "\033[31mMISSION FAILED!" << endl;
-                    if (energy <= 0)
-                        cout << "Your Energy has run out." << endl;
-                    if (time <= 0)
-                        cout << "Your Time has run out." << endl;
-                    cout << "\033[0m";
-                }
                 else
                 {
                     objectives[OBJ_MISSION_WON] = true;
                     applyScoreDelta(score, SCORE_MISSION_VICTORY);
-                    cout << "\033[32mMISSION WON! +"
-                         << SCORE_MISSION_VICTORY << " points.\033[0m" << endl;
                 }
+                showResultScreen(objectives[OBJ_MISSION_WON], score, energy, time);
                 writeGameSummaryReport("out/game_summary.txt", score, energy, time, objectives, objectives[OBJ_MISSION_WON]);
             }
             if (!returnMenuFunction())
                 return;
+            if (!playing)
+                clearScreen();
         }
     }
 }

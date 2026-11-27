@@ -1,0 +1,34 @@
+===========================================
+      THE LAST TRAIN - SESSION SUMMARY     
+===========================================
+FINAL_OUTCOME: VICTORY
+FINAL_SCORE: 520 / 520
+
+--- REMAINING RESOURCES ---
+REMAINING_ENERGY: 9 / 100
+REMAINING_TIME: 9 / 100
+
+--- OBJECTIVES CHECKLIST ---
+[COMPLETED] Master Key Collected
+[COMPLETED] Clue Digit 4 Discovered
+[COMPLETED] Clue Digit 2 Discovered
+[COMPLETED] Clue Digit 7 Discovered
+[COMPLETED] Security Cabinet Unlocked
+[COMPLETED] Train Key Acquired
+[COMPLETED] Fuse Collected
+[COMPLETED] Fuse Installed at Control Panel
+[COMPLETED] Lift Pass Collected
+[COMPLETED] Lift 2 Activated
+[COMPLETED] Injured Passenger Rescued
+[COMPLETED] Cat Carrier Collected
+[COMPLETED] Stranded Cat Secured
+[COMPLETED] Train Prepared & Boarded
+[COMPLETED] Mission Won
+[INCOMPLETE] Mission Failed
+
+--- SESSION AUDIT ---
+MILESTONES_COMPLETED: 14 / 14
+NET_ENERGY_CHANGE: -91
+NET_TIME_CHANGE: -41
+TERMINATION_REASON: All rescue and train boarding objectives achieved.
+===========================================

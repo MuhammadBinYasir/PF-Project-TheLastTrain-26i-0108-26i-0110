@@ -285,9 +285,6 @@ bool handleCollectCommand(char itemSymbol, int currentFloor, int currentRoom,
     entityCount--;
     roomEntities[currentFloor - 1][currentRoom - 1][entityCount] = ENT_NONE;
 
-    if (energy <= 0 || time <= 0)
-        return true;
-
     if (itemSymbol == ENT_MASTER_KEY)
     {
         objectives[OBJ_MASTER_KEY] = true;
@@ -548,7 +545,12 @@ void runSimulation(int &playerFloor, int &playerRoom,
                      << "\033[32m-> Game initialization Successfully!\033[0m" << endl
                      << endl;
             }
-            while (true)
+            if (playerFloor != 0 && !validateStartingRoom(playerFloor, playerRoom, horizontalConn))
+            {
+                cout << "Invalid starting room in initial-state.txt." << endl;
+                continue;
+            }
+            while (playerFloor == 0)
             {
 
                 cout << "\033[35mEnter Floor (1-5) > \033[0m";

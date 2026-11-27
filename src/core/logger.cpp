@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "util.h"
 #include <fstream>
+#include <climits>
 #include <string>
 using namespace std;
 
@@ -125,25 +126,22 @@ bool loadGameStateFromFile(const char *filename,
     if (!file.is_open())
         return false;
 
-    inventoryCount = 0;
-    for (int i = 0; i < MAX_INVENTORY_CAPACITY; i++)
-        inventory[i] = ENT_NONE;
-
-    for (int i = 0; i < NUM_OBJECTIVES; i++)
-        objectives[i] = false;
-
-    for (int f = 0; f < NUM_FLOORS; f++)
-    {
-        for (int r = 0; r < ROOMS_PER_FLOOR; r++)
-        {
-            entityCounts[f][r] = 0;
-            for (int k = 0; k < MAX_ENTITIES_PER_ROOM; k++)
-                roomEntities[f][r][k] = ENT_NONE;
-        }
-    }
-
+    int savedFloor = 0, savedRoom = 0, savedEnergy = 0, savedTime = 0, savedScore = -1;
+    int savedTrips = -1, savedItemCount = 0;
+    char savedInventory[MAX_INVENTORY_CAPACITY];
+    bool savedObjectives[NUM_OBJECTIVES] = {};
+    char savedEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM];
+    int savedCounts[NUM_FLOORS][ROOMS_PER_FLOOR] = {};
+    bool hasStatus = false, hasInventory = false;
+    bool objectiveSeen[NUM_OBJECTIVES] = {};
+    const string objectiveNames[NUM_OBJECTIVES] = {
+        "MASTER_KEY_COLLECTED", "CLUE_4", "CLUE_2", "CLUE_7", "CABINET_UNLOCKED",
+        "TRAIN_KEY_COLLECTED", "FUSE_COLLECTED", "FUSE_INSTALLED", "LIFT_PASS_COLLECTED",
+        "LIFT2_ACTIVE", "PASSENGER_RESCUED", "CAT_CARRIER_COLLECTED", "CAT_RESCUED",
+        "TRAIN_PREPARED", "MISSION_WON", "MISSION_FAILED"};
+    const string roomSymbols = "<)\\4*~;(!%$27^@&";
+    const string carriedSymbols = "<*(%$@^";
     int loadedInventoryCount = -1;
-    bool hasFloor = false, hasRoom = false, hasEnergy = false, hasTime = false, hasScore = false;
     int roomsLoaded = 0;
     bool roomSeen[NUM_FLOORS][ROOMS_PER_FLOOR] = {};
 
@@ -152,23 +150,29 @@ bool loadGameStateFromFile(const char *filename,
     {
         while (getline(file, line))
         {
-            size_t pos = line.find(':');
-            if (pos == string::npos)
+            if (line.empty())
                 continue;
+            if (line.length() > INT_MAX)
+                return false;
+            int length = static_cast<int>(line.length());
+            int pos = 0;
+            while (pos < length && line[pos] != ':')
+                pos++;
+            if (pos == length)
+                return false;
 
             string key = line.substr(0, pos);
-            string value = (pos + 2 <= line.length()) ? line.substr(pos + 2) : "";
-
-            if (value.empty())
+            int start = pos + 1;
+            while (start < length && (line[start] == ' ' || line[start] == '\t'))
+                start++;
+            if (start == length)
                 return false;
+            string value = line.substr(start);
 
             if (key == "PLAYER_FLOOR" || key == "PLAYER_ROOM" ||
                 key == "ENERGY" || key == "TIME" || key == "SCORE" ||
                 key == "EMERGENCY_TRIPS_LEFT" || key == "INVENTORY_COUNT")
             {
-                if (value.empty())
-                    return false;
-
                 for (char ch : value)
                 {
                     if (ch < '0' || ch > '9')
@@ -177,159 +181,71 @@ bool loadGameStateFromFile(const char *filename,
 
                 int number = stoi(value);
 
-                if (key == "PLAYER_FLOOR" && (number < 1 || number > NUM_FLOORS))
+                if (key == "PLAYER_FLOOR")
+                {
+                    if (savedFloor != 0 || number < 1 || number > NUM_FLOORS)
+                        return false;
+                    savedFloor = number;
+                }
+                else if (key == "PLAYER_ROOM")
+                {
+                    if (savedRoom != 0 || number < 1 || number > ROOMS_PER_FLOOR)
+                        return false;
+                    savedRoom = number;
+                }
+                else if (key == "ENERGY")
+                {
+                    if (savedEnergy != 0 || number < 1 || number > MAX_ENERGY)
+                        return false;
+                    savedEnergy = number;
+                }
+                else if (key == "TIME")
+                {
+                    if (savedTime != 0 || number < 1 || number > MAX_TIME)
+                        return false;
+                    savedTime = number;
+                }
+                else if (key == "SCORE")
+                {
+                    if (savedScore != -1)
+                        return false;
+                    savedScore = number;
+                }
+                else if (key == "EMERGENCY_TRIPS_LEFT")
+                {
+                    if (savedTrips != -1 || number > 3)
+                        return false;
+                    savedTrips = number;
+                }
+                else if (key == "INVENTORY_COUNT")
+                {
+                    if (loadedInventoryCount != -1 || number > MAX_INVENTORY_CAPACITY)
+                        return false;
+                    loadedInventoryCount = number;
+                }
+            }
+            else if (key == "GAME_STATUS")
+            {
+                if (hasStatus || value != "IN_PROGRESS")
                     return false;
-
-                if (key == "PLAYER_ROOM" && (number < 1 || number > ROOMS_PER_FLOOR))
-                    return false;
-
-                if (key == "ENERGY" && (number < 1 || number > MAX_ENERGY))
-                    return false;
-
-                if (key == "TIME" && (number < 1 || number > MAX_TIME))
-                    return false;
-
-                if (key == "EMERGENCY_TRIPS_LEFT" && number > 3)
-                    return false;
-
-                if (key == "INVENTORY_COUNT" && number > MAX_INVENTORY_CAPACITY)
-                    return false;
-            }
-
-            if (key == "GAME_STATUS")
-            {
-                if (value != "IN_PROGRESS")
-                    return false; // Cannot resume a finished/invalid save
-            }
-            else if (key == "PLAYER_FLOOR")
-            {
-                playerFloor = stoi(value);
-                hasFloor = true;
-            }
-            else if (key == "PLAYER_ROOM")
-            {
-                playerRoom = stoi(value);
-                hasRoom = true;
-            }
-            else if (key == "ENERGY")
-            {
-                energy = stoi(value);
-                hasEnergy = true;
-            }
-            else if (key == "TIME")
-            {
-                time = stoi(value);
-                hasTime = true;
-            }
-            else if (key == "SCORE")
-            {
-                score = stoi(value);
-                hasScore = true;
-            }
-            else if (key == "EMERGENCY_TRIPS_LEFT")
-            {
-                emergencyTripsLeft = stoi(value);
-            }
-            else if (key == "INVENTORY_COUNT")
-            {
-                loadedInventoryCount = stoi(value);
-                if (loadedInventoryCount < 0 || loadedInventoryCount > MAX_INVENTORY_CAPACITY)
-                    return false;
+                hasStatus = true;
             }
             else if (key == "INVENTORY")
             {
-                inventoryCount = 0;
+                if (hasInventory)
+                    return false;
+                hasInventory = true;
                 if (value != "NONE")
                 {
-                    for (size_t i = 0; i < value.length(); i++)
+                    for (int i = 0; i < static_cast<int>(value.length()); i++)
                     {
                         if (value[i] == ' ')
                             continue;
-                        if (inventoryCount >= MAX_INVENTORY_CAPACITY)
+                        if (savedItemCount >= MAX_INVENTORY_CAPACITY || carriedSymbols.find(value[i]) == string::npos)
                             return false;
-                        inventory[inventoryCount++] = value[i];
+                        savedInventory[savedItemCount++] = value[i];
                     }
                 }
-            }
-            else if (key == "MASTER_KEY_COLLECTED")
-            {
-                if (!parseYesNo(value, objectives[OBJ_MASTER_KEY]))
-                    return false;
-            }
-            else if (key == "CLUE_4")
-            {
-                if (!parseYesNo(value, objectives[OBJ_CLUE_4]))
-                    return false;
-            }
-            else if (key == "CLUE_2")
-            {
-                if (!parseYesNo(value, objectives[OBJ_CLUE_2]))
-                    return false;
-            }
-            else if (key == "CLUE_7")
-            {
-                if (!parseYesNo(value, objectives[OBJ_CLUE_7]))
-                    return false;
-            }
-            else if (key == "CABINET_UNLOCKED")
-            {
-                if (!parseYesNo(value, objectives[OBJ_CABINET_UNLOCKED]))
-                    return false;
-            }
-            else if (key == "TRAIN_KEY_COLLECTED")
-            {
-                if (!parseYesNo(value, objectives[OBJ_TRAIN_KEY]))
-                    return false;
-            }
-            else if (key == "FUSE_COLLECTED")
-            {
-                if (!parseYesNo(value, objectives[OBJ_FUSE_COLLECTED]))
-                    return false;
-            }
-            else if (key == "FUSE_INSTALLED")
-            {
-                if (!parseYesNo(value, objectives[OBJ_FUSE_INSTALLED]))
-                    return false;
-            }
-            else if (key == "LIFT_PASS_COLLECTED")
-            {
-                if (!parseYesNo(value, objectives[OBJ_LIFT_PASS]))
-                    return false;
-            }
-            else if (key == "LIFT2_ACTIVE")
-            {
-                if (!parseYesNo(value, objectives[OBJ_LIFT2_ACTIVE]))
-                    return false;
-            }
-            else if (key == "PASSENGER_RESCUED")
-            {
-                if (!parseYesNo(value, objectives[OBJ_PASSENGER_RESCUED]))
-                    return false;
-            }
-            else if (key == "CAT_CARRIER_COLLECTED")
-            {
-                if (!parseYesNo(value, objectives[OBJ_CAT_CARRIER]))
-                    return false;
-            }
-            else if (key == "CAT_RESCUED")
-            {
-                if (!parseYesNo(value, objectives[OBJ_CAT_SECURED]))
-                    return false;
-            }
-            else if (key == "TRAIN_PREPARED")
-            {
-                if (!parseYesNo(value, objectives[OBJ_TRAIN_PREPARED]))
-                    return false;
-            }
-            else if (key == "MISSION_WON")
-            {
-                if (!parseYesNo(value, objectives[OBJ_MISSION_WON]))
-                    return false;
-            }
-            else if (key == "MISSION_FAILED")
-            {
-                if (!parseYesNo(value, objectives[OBJ_MISSION_FAILED]))
-                    return false;
             }
             else if (key.rfind("ROOM_F", 0) == 0 && key.length() == 10 && key[7] == '_' && key[8] == 'R')
             {
@@ -347,18 +263,31 @@ bool loadGameStateFromFile(const char *filename,
                 if (count < 0 || count > MAX_ENTITIES_PER_ROOM)
                     return false;
 
-                entityCounts[f][r] = count;
+                savedCounts[f][r] = count;
                 int parsedItems = 0;
-                for (size_t i = 1; i < value.length() && parsedItems < count; i++)
+                for (int i = 1; i < static_cast<int>(value.length()); i++)
                 {
                     if (value[i] == ' ')
                         continue;
-                    roomEntities[f][r][parsedItems++] = value[i];
+                    if (parsedItems >= count || roomSymbols.find(value[i]) == string::npos)
+                        return false;
+                    savedEntities[f][r][parsedItems++] = value[i];
                 }
                 if (parsedItems != count)
                     return false;
 
                 roomsLoaded++;
+            }
+            else
+            {
+                int i = 0;
+                while (i < NUM_OBJECTIVES && objectiveNames[i] != key)
+                    i++;
+                if (i == NUM_OBJECTIVES || objectiveSeen[i])
+                    return false;
+                if (!parseYesNo(value, savedObjectives[i]))
+                    return false;
+                objectiveSeen[i] = true;
             }
         }
     }
@@ -367,20 +296,36 @@ bool loadGameStateFromFile(const char *filename,
         return false; // Handles corrupt numbers in stoi() without crashing
     }
 
-    file.close();
-
-    // Final validation of loaded bounds and completeness
-    if (!hasFloor || !hasRoom || !hasEnergy || !hasTime || !hasScore)
-        return false;
-    if (playerFloor < 1 || playerFloor > NUM_FLOORS || playerRoom < 1 || playerRoom > ROOMS_PER_FLOOR)
-        return false;
-    if (energy <= 0 || energy > MAX_ENERGY || time <= 0 || time > MAX_TIME || score < 0)
-        return false;
-    if (loadedInventoryCount != -1 && loadedInventoryCount != inventoryCount)
-        return false;
-    if (roomsLoaded != TOTAL_ROOMS)
+    if (file.bad() || !hasStatus || !hasInventory || savedFloor == 0 || savedRoom == 0 ||
+        savedEnergy == 0 || savedTime == 0 || savedScore < 0 || savedTrips < 0 ||
+        loadedInventoryCount != savedItemCount || roomsLoaded != TOTAL_ROOMS)
         return false;
 
+    for (int i = 0; i < NUM_OBJECTIVES; i++)
+        if (!objectiveSeen[i])
+            return false;
+
+    // Update the game only after the entire save has passed validation.
+    playerFloor = savedFloor;
+    playerRoom = savedRoom;
+    energy = savedEnergy;
+    time = savedTime;
+    score = savedScore;
+    emergencyTripsLeft = savedTrips;
+    inventoryCount = savedItemCount;
+    for (int i = 0; i < MAX_INVENTORY_CAPACITY; i++)
+        inventory[i] = i < inventoryCount ? savedInventory[i] : ENT_NONE;
+    for (int i = 0; i < NUM_OBJECTIVES; i++)
+        objectives[i] = savedObjectives[i];
+    for (int f = 0; f < NUM_FLOORS; f++)
+    {
+        for (int r = 0; r < ROOMS_PER_FLOOR; r++)
+        {
+            entityCounts[f][r] = savedCounts[f][r];
+            for (int i = 0; i < MAX_ENTITIES_PER_ROOM; i++)
+                roomEntities[f][r][i] = i < savedCounts[f][r] ? savedEntities[f][r][i] : ENT_NONE;
+        }
+    }
     return true;
 }
 

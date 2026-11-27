@@ -206,6 +206,12 @@ bool loadInitialState(const char *filename,
 
             value = value.substr(NoOfDigit);
 
+            if (key == "INITIAL_ENERGY" || key == "INITIAL_TIME" || key == "INITIAL_SCORE")
+            {
+                if (value.empty() || value.find_first_not_of("0123456789") != string::npos)
+                    return false;
+            }
+
             if (key == "INITIAL_ENERGY")
             {
                 energy = stoi(value);
@@ -255,7 +261,7 @@ bool loadInitialState(const char *filename,
                 }
                 else
                 {
-                    for (int i = 0; i < (int)value.length() && inventoryCount < MAX_INVENTORY_CAPACITY; i++)
+                    for (int i = 0; i < (int)value.length(); i++)
                     {
                         if (value[i] == ' ')
                             continue;
@@ -333,7 +339,7 @@ bool loadInitialState(const char *filename,
     {
         return false;
     }
-    if (!energyStatus || !timeStatus || !scoreStatus || !StartStatus || energy < 0 || energy > MAX_ENERGY || time < 0 || time > MAX_TIME || score < 0)
+    if (!energyStatus || !timeStatus || !scoreStatus || !StartStatus || energy <= 0 || energy > MAX_ENERGY || time <= 0 || time > MAX_TIME || score < 0)
     {
         return false;
     }

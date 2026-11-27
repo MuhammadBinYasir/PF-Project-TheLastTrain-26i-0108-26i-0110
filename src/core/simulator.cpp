@@ -8,6 +8,8 @@
 #include <string>
 #include <iomanip>
 #include "level.h"
+#include <chrono>
+#include <thread>
 using namespace std;
 
 // Modular simulation loop using primitive variables
@@ -509,6 +511,43 @@ void showResultScreen(bool won, int score, int energy, int time)
     printBorder(color);
 }
 
+
+void showSplashScreen()
+{
+    clearScreen();
+
+    string firstRow =
+        " ##### #   # #####     #       ###    ####  #####     ##### ####    ###   ##### #   #";
+
+    int titleWidth = static_cast<int>(firstRow.length());
+    string titlePadding((BOX_WIDTH - titleWidth) / 2, ' ');
+
+    cout << "\033[33m" << endl;
+    cout << titlePadding << firstRow << endl;
+    cout << titlePadding << "   #   #   # #         #      #   #  #        #         #   #   #  #   #    #   ##  #" << endl;
+    cout << titlePadding << "   #   ##### ####      #      #####   ###     #         #   ####   #####    #   # # #" << endl;
+    cout << titlePadding << "   #   #   # #         #      #   #      #    #         #   #  #   #   #    #   #  ##" << endl;
+    cout << titlePadding << "   #   #   # #####     #####  #   #  ####     #         #   #   #  #   #  ##### #   #" << endl;
+    cout << endl;
+
+    const int barWidth = 25;
+    const int progressWidth = barWidth + 7;  // Includes brackets, space, and "100%"
+    string barPadding((BOX_WIDTH - progressWidth) / 2, ' ');
+
+    for (int filled = 0; filled <= barWidth; filled++)
+    {
+        cout << "\r" << barPadding
+             << "[" << string(filled, '#') << string(barWidth - filled, '-') << "] "
+             << right << setw(3) << filled * 100 / barWidth << "%" << flush;
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(65));
+    }
+
+    cout << "\033[0m" << endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    clearScreen();
+}
+
 void runSimulation(int &playerFloor, int &playerRoom,
                    int &energy, int &time, int &score,
                    char inventory[MAX_INVENTORY_CAPACITY], int &inventoryCount,
@@ -517,6 +556,8 @@ void runSimulation(int &playerFloor, int &playerRoom,
                    char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
                    int entityCounts[NUM_FLOORS][ROOMS_PER_FLOOR])
 {
+
+    showSplashScreen();
 
     while (true)
     {

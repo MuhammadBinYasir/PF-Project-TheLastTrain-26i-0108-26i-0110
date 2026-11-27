@@ -612,19 +612,59 @@ void runSimulation(int &playerFloor, int &playerRoom,
         case 3:
         {
             clearScreen();
-            cout << endl
-                 << "MISSION OBJECTIVES" << endl;
-            cout << endl
-                 << "1. Rescue the passenger and cat." << endl;
-            cout << "2. Find clues and unlock the cabinet." << endl;
-            cout << "3. Restore the lift and board the train." << endl;
+
+            const string heading = "\033[30;43m"; // Black text on yellow
+            const string normal = "\033[0m";      // Default terminal text
+
+            printBorder();
+            printBoxLine("THE LAST TRAIN  |  PLAYER GUIDE", heading);
+            printBoxLine("Rescue the passenger and the cat, then board the train at F5-R2.", normal);
+            printBoxLine("You start with 100 energy and 50 time. If either reaches zero, the mission ends.", normal);
+
+            printBorder();
+            printBoxLine("CONTROLS", heading);
+            printBoxLine("1  Move to a connected room           5  Show location, resources and inventory", normal);
+            printBoxLine("2  Inspect the room and find clues    6  Show the building map", normal);
+            printBoxLine("3  Collect an item by its symbol      7  Show the objectives checklist", normal);
+            printBoxLine("4  Use an item or interact            8  Save your progress", normal);
+            printBoxLine("0  Return to the main menu            Save first if you want to resume later.", normal);
+
+            printBorder();
+            printBoxLine("HOW TO PLAY", heading);
+            printBoxLine("Start by choosing a floor (1-5) and a room (1-4). F3-R2 means Floor 3, Room 2.", normal);
+            printBoxLine("To move, enter 1, then the destination floor and room. Each move uses one connection.", normal);
+            printBoxLine("To collect, enter 3, then the item's symbol. Example: in F1-R2, enter 3 and then <.", normal);
+            printBoxLine("To use an item, enter 4 and its symbol while standing in the room where it is needed.", normal);
+
+            printBorder();
+            printBoxLine("MAP AND MOVEMENT", heading);
+            printBoxLine("D  Door           W  Window           L  Locked door           #  Solid wall", normal);
+            printBoxLine("The Master Key (<) opens the locked door. A solid wall blocks movement.", normal);
+            printBoxLine("Stairs connect marked rooms. Lift 1 runs between floors 1 and 2.", normal);
+            printBoxLine("Lift 2 serves floors 2, 4 and 5. Install the Fuse and carry the Lift Pass to ride.", normal);
+            printBoxLine("Before repair, the Emergency Card ($) gives you up to three Lift 2 trips.", normal);
+
+            printBorder();
+            printBoxLine("MISSION OBJECTIVES", heading);
+            printBoxLine("Passenger   Use the Medical Kit (%) at F4-R1.      Cat   Use the Cat Carrier (@) at F3-R3.", normal);
+            printBoxLine("Lift        Use the Fuse (*) at the control panel in F3-R4. Collect the Lift Pass there.", normal);
+            printBoxLine("Cabinet     Inspect rooms to discover three digits. At F5-R1, use ^ and enter the code.", normal);
+            printBoxLine("Train       Collect the unlocked Train Key (^). Use it at F5-R2 after completing the objectives.", normal);
+
+            printBorder();
+            printBoxLine("ENERGY AND TIME", heading);
+            printBoxLine("Door or stairs   -2 energy, -1 time       Window   -3 energy, -2 time", normal);
+            printBoxLine("Lift ride        -4 energy, -3 time       Inspect, carry an item, or use it   -1 energy, -1 time", normal);
+            printBoxLine("Instant pickups:  ) Energy Pack +25 energy    \\ Toolkit +15 energy    & Token +15 time", normal);
+            printBoxLine("Energy and time are capped at 100. Rejected actions cost nothing.", normal);
+            printBorder();
 
             if (!returnMenuFunction())
                 return;
 
+            clearScreen();
             continue;
         }
-
         case 4:
             cout << "Thank you for playing The Last Train!" << endl;
             return;

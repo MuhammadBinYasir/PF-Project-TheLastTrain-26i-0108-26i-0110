@@ -136,7 +136,7 @@ bool returnMenuFunction()
     int in;
     while (true)
     {
-        cout << "\033[35mEnter -1 to Move Back to Main Menu > \033[0m";
+        cout << "\033[35mEnter -1 to Continue > \033[0m";
         cin >> in;
         if (cin.fail() && cin.eof())
             return false;

@@ -62,7 +62,7 @@ void renderRoomDetails(int floor, int room,
     cout << endl;
 }
 
-void renderAsciiBuilding(int playerFloor, int playerRoom)
+void renderAsciiBuilding(int playerFloor, int playerRoom, const char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM], const int entityCounts[NUM_FLOORS][ROOMS_PER_FLOOR])
 {
     ifstream file("data/building.txt");
 
@@ -99,6 +99,35 @@ void renderAsciiBuilding(int playerFloor, int playerRoom)
         {
             cout << line << endl;
         }
+
+        for (int f = 0; f < NUM_FLOORS; f++)
+        {
+            string label = "F" + to_string(f + 1) + "-R1";
+            int col = static_cast<int>(line.find(label));
+            if (col == -1)
+                continue;
+
+            string items;
+            if (!getline(file, items))
+                return;
+
+            for (int r = 0; r < ROOMS_PER_FLOOR; r++)
+            {
+                int i = 0;
+                while (col < static_cast<int>(items.length()) && items[col] != '|')
+                {
+                    if (i < entityCounts[f][r] && items[col] == roomEntities[f][r][i])
+                        i++;
+                    else
+                        items[col] = ' ';
+                    col++;
+                }
+                col++;
+            }
+
+            cout << items << endl;
+            break;
+        }
     }
 }
 
@@ -110,12 +139,15 @@ void renderObjectivesChecklist(const bool objectives[NUM_OBJECTIVES])
         "Cat Carrier collected", "Cat secured", "Train prepared", "Mission won", "Mission failed"};
 
     cout << endl
-         << "OBJECTIVES CHECKLIST" << endl << endl;
+         << "OBJECTIVES CHECKLIST" << endl
+         << endl;
 
     for (int i = 0; i < NUM_OBJECTIVES; i++)
     {
-        if (objectives[i]) cout << "\033[32m[OK]\033[0m "; 
-        else cout << "\033[31m[X]\033[0m ";
+        if (objectives[i])
+            cout << "\033[32m[OK]\033[0m ";
+        else
+            cout << "\033[31m[X]\033[0m ";
 
         cout << names[i] << endl;
     }

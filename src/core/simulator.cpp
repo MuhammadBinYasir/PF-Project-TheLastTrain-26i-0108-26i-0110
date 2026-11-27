@@ -829,7 +829,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
                 renderDashboard(playerFloor, playerRoom, energy, time, score, inventory, inventoryCount, emergencyTripsLeft);
                 break;
             case 6:
-                renderAsciiBuilding(playerFloor, playerRoom);
+                renderAsciiBuilding(playerFloor, playerRoom, roomEntities, entityCounts);
                 break;
             case 7:
                 renderObjectivesChecklist(objectives);

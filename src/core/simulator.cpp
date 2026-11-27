@@ -511,7 +511,6 @@ void showResultScreen(bool won, int score, int energy, int time)
     printBorder(color);
 }
 
-
 void showSplashScreen()
 {
     clearScreen();
@@ -531,7 +530,7 @@ void showSplashScreen()
     cout << endl;
 
     const int barWidth = 25;
-    const int progressWidth = barWidth + 7;  // Includes brackets, space, and "100%"
+    const int progressWidth = barWidth + 7; // Includes brackets, space, and "100%"
     string barPadding((BOX_WIDTH - progressWidth) / 2, ' ');
 
     for (int filled = 0; filled <= barWidth; filled++)
@@ -546,6 +545,40 @@ void showSplashScreen()
     cout << "\033[0m" << endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     clearScreen();
+}
+
+void showExitScreen()
+{
+    const string headerColor = "\033[1;35m"; // Bright magenta
+    const string textColor = "\033[96m";     // Light cyan
+
+const string messages[] = {
+    "Wait... this is your stop already?",
+    "One more stop? You can have the window seat. I'll let you pick the music.",
+    "You've got your coat on. Right. Let me get the door.",
+    "Listen to me getting all teary. I'm a train. I'm supposed to let people go.",
+    "If you ever hear me whistle twice, the second one's for you."
+};
+
+    string title = "THE LAST TRAIN  |  LAST STOP";
+    int titlePadding = (BOX_WIDTH - 2 - static_cast<int>(title.length())) / 2;
+
+    for (const string &message : messages)
+    {
+        clearScreen();
+
+        int padding = (BOX_WIDTH - 2 - static_cast<int>(message.length())) / 2;
+
+        cout << endl;
+        printBorder(headerColor);
+        printBoxLine(string(titlePadding, ' ') + title, headerColor);
+        printBoxLine("", textColor);
+        printBoxLine(string(padding, ' ') + message, textColor);
+        printBoxLine("", textColor);
+        printBorder(headerColor);
+
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
 }
 
 void runSimulation(int &playerFloor, int &playerRoom,
@@ -707,7 +740,7 @@ void runSimulation(int &playerFloor, int &playerRoom,
             continue;
         }
         case 4:
-            cout << "Thank you for playing The Last Train!" << endl;
+            showExitScreen();
             return;
 
         default:
